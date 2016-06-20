@@ -1,0 +1,98 @@
+<!--<?xml version="1.0" encoding="utf-8"?>-->
+<android.support.v7.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/card_view"
+    android:layout_margin="@dimen/card_view_default_margin"
+
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?selectableItemBackground">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <!--android:background="@color/cardview_light_background">-->
+        <!--android:paddingLeft="16dp"-->
+        <!--android:paddingRight="16dp"-->
+        <!--android:paddingTop="8dp"-->
+        <!--android:paddingBottom="8dp"-->
+        <!--android:gravity="center_vertical">-->
+
+        <!--<com.facebook.drawee.view.SimpleDraweeView-->
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/avatar"
+            android:layout_width="@dimen/list_item_avatar_size"
+            android:layout_height="@dimen/list_item_avatar_size"
+            android:layout_gravity="center"
+            />
+        <!--fresco:actualImageScaleType="focusCrop"-->
+        <!--fresco:placeholderImage="@color/colorPrimary"-->
+
+
+        <TextView
+            android:id="@+id/text1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textAppearance="?attr/textAppearanceListItem"/>
+
+    </LinearLayout>
+</android.support.v7.widget.CardView>
+<!--<android.support.v7.widget.CardView-->
+<!--xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--android:id="@+id/list_card"-->
+<!--android:layout_width="match_parent"-->
+<!--android:layout_height="wrap_content"-->
+<!--android:layout_margin="@dimen/card_view_default_margin"-->
+<!--android:clickable="true"-->
+<!--android:focusable="true"-->
+<!--xmlns:fresco="http://schemas.android.com/apk/res-auto">-->
+<!--&lt;!&ndash;android:foreground="?selectableItemBackground"&ndash;&gt;-->
+
+
+
+
+<!--</android.support.v7.widget.CardView>-->
+
+
+<!--<android.support.v7.widget.CardView-->
+    <!--xmlns:card_view="http://schemas.android.com/apk/res-auto"-->
+    <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
+    <!--android:id="@+id/card_view"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--card_view:cardUseCompatPadding="true"-->
+    <!--card_view:cardCornerRadius="8dp"-->
+    <!--android:layout_marginBottom="16dp">-->
+
+    <!--<RelativeLayout-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent">-->
+
+        <!--<ImageView-->
+            <!--android:id="@+id/avatar"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_centerInParent="true"-->
+            <!--android:scaleType="centerCrop" />-->
+        <!--&lt;!&ndash;android:src="@drawable/newyork"&ndash;&gt;-->
+
+
+        <!--<TextView-->
+            <!--android:id="@+id/text1"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:gravity="center"-->
+            <!--android:textSize="36sp"-->
+            <!--android:textColor="@color/colorAccent"-->
+            <!--android:textStyle="bold"-->
+            <!--android:layout_centerInParent="true"/>-->
+        <!--&lt;!&ndash;android:text="@string/country_name"&ndash;&gt;-->
+
+    <!--</RelativeLayout>-->
+
+<!--</android.support.v7.widget.CardView>-->

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array>
+        <item>Item_id</item>
+        <item>Item_name</item>
+        <item>Item_category</item>
+        <item>Item_pic_path</item>
+    </array>
+</resources>
