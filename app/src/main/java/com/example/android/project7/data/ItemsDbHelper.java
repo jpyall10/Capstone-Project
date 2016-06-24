@@ -12,7 +12,7 @@ public class ItemsDbHelper extends SQLiteOpenHelper {
 
     private static final String LOG_TAG = ItemsDbHelper.class.getSimpleName();
 
-    private static final int DATABASE_VERSION = 16;
+    private static final int DATABASE_VERSION = 2;
 
     static final String DATABASE_NAME = "items.db";
 
@@ -29,8 +29,8 @@ public class ItemsDbHelper extends SQLiteOpenHelper {
                 ItemsContract.ItemsEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 ItemsContract.ItemsEntry.COLUMN_NAME + " TEXT NOT NULL, " +
                 ItemsContract.ItemsEntry.COLUMN_CATEGORY + " TEXT NOT NULL, " +
-                ItemsContract.ItemsEntry.COLUMN_DETAIL_1 + " TEXT, " +
-                ItemsContract.ItemsEntry.COLUMN_FAVORITES + " TEXT " +
+                //ItemsContract.ItemsEntry.COLUMN_DETAIL_1 + " TEXT, " +
+                //ItemsContract.ItemsEntry.COLUMN_FAVORITES + " TEXT " +
                 ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID + " INTEGER " +
                 ");";
 

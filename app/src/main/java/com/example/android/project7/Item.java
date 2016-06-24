@@ -9,15 +9,17 @@ import java.util.Random;
 public class Item {
 
 	private String name;
+	private String category;
 	private int photo;
 	private static Context context;
 	
 	private static final Random RANDOM = new Random();
 
-	public Item(Context context, int name, int photo){
+	public Item(Context context, String name, int photo, String category){
 		this.context = context;
-		this.name = context.getString(name);
+		this.name = name;
 		this.photo = photo;
+		this.category = category;
 	}
 
 	public String getName(){
@@ -30,6 +32,11 @@ public class Item {
 	public int getPhoto(){
 		return photo;
 	}
+
+	public String getCategory(){
+		return category;
+	}
+
 	public static int getRandomItemDrawable() {
 		switch (RANDOM.nextInt(5)){
 			default:

@@ -119,7 +119,7 @@ public class ItemsProvider extends ContentProvider {
             case ITEMS: {
                 long _id = db.insert(ItemsContract.ItemsEntry.TABLE_NAME, null, values);
                 if ( _id > 0 )
-                    returnUri = ItemsContract.ItemsEntry.buildItemsUri(_id);
+                    returnUri = ItemsContract.ItemsEntry.buildItemUri(_id);
                 else
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 break;

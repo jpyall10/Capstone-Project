@@ -31,9 +31,9 @@ public class ItemsContract {
         public static final String COLUMN_NAME = "item_name";
         public static final String COLUMN_CATEGORY = "category";
 
-        public static final String COLUMN_FAVORITES = "favorites";
+        //public static final String COLUMN_FAVORITES = "favorites";
 
-        public static final String COLUMN_DETAIL_1 = "item_detail_1";
+        //public static final String COLUMN_DETAIL_1 = "item_detail_1";
 
         public static final String COLUMN_PHOTO_RES_ID = "photo_res_id";
 
@@ -49,7 +49,7 @@ public class ItemsContract {
                 ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_ITEMS;
 
 
-        public static Uri buildItemsUri(long id) {
+        public static Uri buildItemUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
     }

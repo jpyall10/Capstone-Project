@@ -1,9 +1,12 @@
 package com.example.android.project7;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -63,7 +66,7 @@ import java.util.List;
 //        rView.setHasFixedSize(true);
 //        rView.setLayoutManager(gridLayoutManager);
 //
-//        RecyclerViewAdapter rcAdapter = new RecyclerViewAdapter(MainActivity.this, rowListItem);
+//        ItemsGridAdapter rcAdapter = new ItemsGridAdapter(MainActivity.this, rowListItem);
 //        rView.setAdapter(rcAdapter);
 //
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -161,14 +164,16 @@ import java.util.List;
 //    }
 //}
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ItemGridFragment.Callback{
     private DrawerLayout mDrawerLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
+        Uri contentUri = getIntent() != null ? getIntent().getData() : null;
+
+        setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -176,17 +181,17 @@ public class MainActivity extends AppCompatActivity {
         ab.setHomeAsUpIndicator(R.drawable.ic_menu);
         ab.setDisplayHomeAsUpEnabled(true);
 
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        //mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        if(navigationView != null){
-            setupDrawerContent(navigationView);
-        }
+        //NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        //if(navigationView != null){
+        //    setupDrawerContent(navigationView);
+        //}
 
-        ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
-        if(viewPager != null){
-            setupViewPager(viewPager);
-        }
+//        ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
+//        if(viewPager != null){
+//            setupViewPager(viewPager);
+//        }
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -196,8 +201,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
-        tabLayout.setupWithViewPager(viewPager);
+//        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+//        tabLayout.setupWithViewPager(viewPager);
     }
 
     @Override
@@ -251,6 +256,12 @@ public class MainActivity extends AppCompatActivity {
         public CharSequence getPageTitle(int position){
             return mFragmentTitles.get(position);
         }
+    }
+
+    @Override
+    public void onItemSelected(Uri contentUri, ItemsGridAdapter.ItemsGridAdapterViewHolder vh){
+        Intent intent = new Intent(this, ItemDetailActivity.class)
+                .setData(contentUri);
     }
 
 }
