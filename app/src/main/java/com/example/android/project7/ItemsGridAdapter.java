@@ -89,14 +89,22 @@ public class ItemsGridAdapter
 
     @Override
     public void onBindViewHolder(ItemsGridAdapterViewHolder holder, int position) {
+        mCursor.moveToPosition(position);
         int photo;
         final String name;
         //holder.mNameString
+//        if(!mCursor.isLast()) {
+//            mCursor.moveToNext();
+//        }else{
+//            mCursor.moveToFirst();
+//        }
         name = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_NAME));
         holder.mTextView.setText(name);
         photo = mCursor.getInt(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID));
-        mCursor.moveToNext();
+
         Log.d("IGA", "OnBindViewHolder ran " + " and photo, name " + photo + ", " + name);
+
+        Log.d("IGA", "OnBindViewHolder ran " + " position = " + position);
 
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override

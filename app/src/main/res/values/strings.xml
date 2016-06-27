@@ -12,13 +12,23 @@
     <string name="animal_label_dog">dog</string>
     <string name="animal_label_owl">owl</string>
     <string name="person_name_label">Name</string>
-    <string name="fruit_label_apple">Apple</string>
-    <string name="fruit_label_banana">Banana</string>
+
     <string name="person_name_dad">Dad</string>
     <string name="person_name_mom">Mom</string>
+    <string name="person_name_grandpa_bones">Grandpa Bones</string>
+    <string name="person_name_grandpa_porter">Grandpa Porter</string>
+    <string name="person_name_grandma_amy">Grandma Amy</string>
+    <string name="person_name_grandma_carmen">Grandma Carmen</string>
+    <string name="person_name_uncle_tone">Uncle Tone</string>
+    <string name="person_name_uncle_vinnie">Uncle Vinnie</string>
+    <string name="person_name_aunt_mel">Aunt Melly</string>
+
+
     <string name="person_name_brother">Brother</string>
     <string name="person_name_sister">Sister</string>
+
     <string name="food_name_apple">Apple</string>
     <string name="food_name_banana">Banana</string>
+
     <string name="default_columns">2</string>
 </resources>

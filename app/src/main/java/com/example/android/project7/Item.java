@@ -67,6 +67,24 @@ public class Item {
 				return R.drawable.apple_1;
 			case "banana":
 				return R.drawable.banana_1;
+			case "mom":
+				return R.drawable.mom_1;
+			case "dad":
+				return R.drawable.dad_1;
+			case "uncle tone":
+				return R.drawable.uncle_tone_1;
+			case "uncle vinnie":
+				return R.drawable.uncle_vinnie_1;
+			case "grandma carmen":
+				return R.drawable.grandma_carmen_1;
+			case "grandma amy":
+				return R.drawable.grandma_amy_1;
+			case "grandpa porter":
+				return R.drawable.grandpa_porter_1;
+			case "grandpa bones":
+				return R.drawable.grandpa_bones_1;
+			case "aunt melly":
+				return R.drawable.aunt_mel_1;
 			default:
 				return R.drawable.v_face;
 		}
