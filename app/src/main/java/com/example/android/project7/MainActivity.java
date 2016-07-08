@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -15,8 +14,6 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,7 +25,7 @@ import com.example.android.project7.data.ItemsContract;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements ItemGridFragment.Callback{
+public class MainActivity extends AppCompatActivity implements ItemsGridFragment.Callback{
 
     private DrawerLayout mDrawerLayout;
     private Cursor mCursor;
@@ -44,9 +41,11 @@ public class MainActivity extends AppCompatActivity implements ItemGridFragment.
         Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
         final ActionBar ab = getSupportActionBar();
         ab.setHomeAsUpIndicator(R.drawable.ic_menu);
-        ab.setDisplayHomeAsUpEnabled(true);
+        //ab.setDisplayHomeAsUpEnabled(true);
+
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
@@ -74,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements ItemGridFragment.
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
-        getMenuInflater().inflate(R.menu.sample_actions, menu);
+        getMenuInflater().inflate(R.menu.menu_detail_fragment, menu);
         return true;
     }
 
@@ -82,12 +81,9 @@ public class MainActivity extends AppCompatActivity implements ItemGridFragment.
         Adapter adapter = new Adapter(getSupportFragmentManager());
         Bundle args = new Bundle();
         args.putString("category", getString(R.string.category_animals));
-//        ItemGridFragment animalsFrag = new ItemGridFragment();
-//        animalsFrag.setArguments(args);
-//        adapter.addFragment(animalsFrag, args.getString("category"));
-        adapter.addFragment(ItemGridFragment.newInstance(getString(R.string.category_animals)), getString(R.string.category_animals));
-        adapter.addFragment(ItemGridFragment.newInstance(getString(R.string.category_people)),getString(R.string.category_people));
-        adapter.addFragment(ItemGridFragment.newInstance(getString(R.string.category_food)),getString(R.string.category_food));
+        adapter.addFragment(com.example.android.project7.ItemsGridFragment.newInstance(getString(R.string.category_animals)), getString(R.string.category_animals));
+        adapter.addFragment(com.example.android.project7.ItemsGridFragment.newInstance(getString(R.string.category_people)),getString(R.string.category_people));
+        adapter.addFragment(com.example.android.project7.ItemsGridFragment.newInstance(getString(R.string.category_food)), getString(R.string.category_food));
         viewPager.setAdapter(adapter);
     }
 
@@ -134,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements ItemGridFragment.
     public void onItemSelected(Uri contentUri, ItemsGridAdapter.ItemsGridAdapterViewHolder vh){
         Intent intent = new Intent(this, ItemDetailActivity.class)
                 .setData(contentUri);
+        startActivity(intent);
     }
 
 }

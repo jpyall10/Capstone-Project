@@ -29,9 +29,25 @@ public class ItemsDbHelper extends SQLiteOpenHelper {
                 ItemsContract.ItemsEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 ItemsContract.ItemsEntry.COLUMN_NAME + " TEXT NOT NULL, " +
                 ItemsContract.ItemsEntry.COLUMN_CATEGORY + " TEXT NOT NULL, " +
+//                ItemsContract.ItemsEntry.COLUMN_EXTRA_PIC_URI_1 + " TEXT " +
                 //ItemsContract.ItemsEntry.COLUMN_DETAIL_1 + " TEXT, " +
                 //ItemsContract.ItemsEntry.COLUMN_FAVORITES + " TEXT " +
-                ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID + " INTEGER " +
+                ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID + " INTEGER NOT NULL, " +
+                //ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1 + " TEXT, " +
+                ItemsContract.ItemsEntry.COLUMN_EXTRA_CARD_LABEL_1 + " TEXT, " +
+                ItemsContract.ItemsEntry.COLUMN_EXTRA_CARD_DESCRIPTION_1 + " TEXT, " +
+                ItemsContract.ItemsEntry.COLUMN_EXTRA_CARD_PHOTO_1 + " TEXT, " +
+                ItemsContract.ItemsEntry.COLUMN_EXTRA_CARD_LABEL_2 + " TEXT, " +
+                ItemsContract.ItemsEntry.COLUMN_EXTRA_CARD_DESCRIPTION_2 + " TEXT, " +
+                ItemsContract.ItemsEntry.COLUMN_EXTRA_CARD_PHOTO_2 + " TEXT, " +
+                ItemsContract.ItemsEntry.COLUMN_EXTRA_CARD_LABEL_3 + " TEXT, " +
+                ItemsContract.ItemsEntry.COLUMN_EXTRA_CARD_DESCRIPTION_3 + " TEXT, " +
+                ItemsContract.ItemsEntry.COLUMN_EXTRA_CARD_PHOTO_3 + " TEXT, " +
+                ItemsContract.ItemsEntry.COLUMN_EXTRA_CARD_LABEL_4 + " TEXT, " +
+                ItemsContract.ItemsEntry.COLUMN_EXTRA_CARD_DESCRIPTION_4 + " TEXT, " +
+                ItemsContract.ItemsEntry.COLUMN_EXTRA_CARD_PHOTO_4 + " TEXT " +
+
+
                 ");";
 
         db.execSQL(SQL_CREATE_ITEMS_TABLE);

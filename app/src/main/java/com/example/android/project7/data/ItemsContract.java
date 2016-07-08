@@ -30,12 +30,28 @@ public class ItemsContract {
         //public static final String COLUMN_ID = "item_id";
         public static final String COLUMN_NAME = "item_name";
         public static final String COLUMN_CATEGORY = "category";
-
         //public static final String COLUMN_FAVORITES = "favorites";
 
         //public static final String COLUMN_DETAIL_1 = "item_detail_1";
 
         public static final String COLUMN_PHOTO_RES_ID = "photo_res_id";
+        public static final String COLUMN_PHOTO_EXTRA_1 = "photo_extra_1";
+//        public static final String COLUMN_EXTRA_PIC_URI_1 = "extra_pic_1";
+        public static final String COLUMN_EXTRA_CARD_LABEL_1 = "card_label_1";
+        public static final String COLUMN_EXTRA_CARD_DESCRIPTION_1 = "card_description_1";
+        public static final String COLUMN_EXTRA_CARD_PHOTO_1 = "card_photo_1";
+
+        public static final String COLUMN_EXTRA_CARD_LABEL_2 = "card_label_2";
+        public static final String COLUMN_EXTRA_CARD_DESCRIPTION_2 = "card_description_2";
+        public static final String COLUMN_EXTRA_CARD_PHOTO_2 = "card_photo_2";
+
+        public static final String COLUMN_EXTRA_CARD_LABEL_3 = "card_label_3";
+        public static final String COLUMN_EXTRA_CARD_DESCRIPTION_3 = "card_description_3";
+        public static final String COLUMN_EXTRA_CARD_PHOTO_3 = "card_photo_3";
+
+        public static final String COLUMN_EXTRA_CARD_LABEL_4 = "card_label_4";
+        public static final String COLUMN_EXTRA_CARD_DESCRIPTION_4 = "card_description_4";
+        public static final String COLUMN_EXTRA_CARD_PHOTO_4 = "card_photo_4";
 
 
 
@@ -46,7 +62,8 @@ public class ItemsContract {
         public static final String CONTENT_TYPE =
                 ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_ITEMS;
         public static final String CONTENT_ITEM_TYPE =
-                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_ITEMS;
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_ITEMS + "/#";
+
 
 
         public static Uri buildItemUri(long id) {

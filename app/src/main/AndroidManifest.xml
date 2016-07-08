@@ -4,6 +4,12 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!--Accessing camera hardware-->
+    <uses-feature android:name="android.hardware.CAMERA"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -26,6 +32,12 @@
             android:parentActivityName=".MainActivity">
             <meta-data android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
+        </activity>
+
+        <activity android:name=".EditItemDetailActivity"
+            android:parentActivityName=".ItemDetailActivity">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ItemDetailActivity" />
         </activity>
 
         <provider

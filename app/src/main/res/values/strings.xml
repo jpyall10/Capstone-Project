@@ -3,6 +3,10 @@
     <string name="action_settings">Settings</string>
     <string name="default_item_blurb">This is the description of the person, place or thing you have entered</string>
     <string name="menu_settings">Settings</string>
+    <string name="item_settings">Item Settings</string>
+    <string name="edit_list">Edit List</string>
+
+
     <string name="category_people">People</string>
     <string name="category_animals">Animals</string>
     <string name="category_food">Food</string>
@@ -11,6 +15,9 @@
     <string name="animal_label_cow">cow</string>
     <string name="animal_label_dog">dog</string>
     <string name="animal_label_owl">owl</string>
+    <string name="animal_label_elephant">elephant</string>
+    <string name="animal_label_lion">lion</string>
+    <string name="animal_label_squirrel">squirrel</string>
     <string name="person_name_label">Name</string>
 
     <string name="person_name_dad">Dad</string>
@@ -29,6 +36,21 @@
 
     <string name="food_name_apple">Apple</string>
     <string name="food_name_banana">Banana</string>
+    <string name="food_name_brocolli">Broccoli</string>
+
+    <string name="food_name_grapes">Grapes</string>
+    <string name="food_name_oranges">Oranges</string>
+    <string name="food_name_peas">Peas</string>
+    <string name="food_name_strawberries">Strawberries</string>
+    <string name="food_name_tomatoes">Tomatoes</string>
+
+
 
     <string name="default_columns">2</string>
+    <string name="person_name_cousin_rachel">Rachel</string>
+    <string name="person_name_cousin_porter">Porter</string>
+    <string name="person_name_cousin_sophia">Sophia</string>
+    <string name="person_name_aunt_pam">Aunt Pam</string>
+    <string name="person_name_aunt_debi">Aunt Debi</string>
+    <string name="take_photo">Take a Photo</string>
 </resources>
