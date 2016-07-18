@@ -8,12 +8,12 @@ import android.widget.LinearLayout;
 /**
  * Created by Jon on 6/28/2016.
  */
-public class CheckableLinearLayout extends LinearLayout implements Checkable {
+public class MyLinearLayout extends LinearLayout implements Checkable {
     private static final int[] CHECKED_STATE_SET = {android.R.attr.state_checked};
 
     private boolean mChecked = false;
 
-    public CheckableLinearLayout(Context context, AttributeSet attrs){
+    public MyLinearLayout(Context context, AttributeSet attrs){
         super(context,attrs);
     }
     @Override

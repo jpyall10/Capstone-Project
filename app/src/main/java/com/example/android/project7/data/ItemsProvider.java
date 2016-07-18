@@ -21,6 +21,8 @@ public class ItemsProvider extends ContentProvider {
     private static final UriMatcher sUriMatcher = buildUriMatcher();
     static final int ITEMS = 100;
     static final int ITEM_WITH_ID = 101;
+    static final int CARDS = 102;
+    static final int CARD_WITH_ID = 103;
 
     private static final SQLiteQueryBuilder sItemByIdQueryBuilder;
 
@@ -43,6 +45,9 @@ public class ItemsProvider extends ContentProvider {
 
         matcher.addURI(authority, ItemsContract.PATH_ITEMS, ITEMS);
         matcher.addURI(authority, ItemsContract.PATH_ITEMS + "/#", ITEM_WITH_ID);
+        matcher.addURI(authority, ItemsContract.PATH_ITEMS + "/#/" + ItemsContract.PATH_CARDS, CARDS);
+        matcher.addURI(authority, ItemsContract.PATH_ITEMS + "/#/" + ItemsContract.PATH_CARDS + "/#", CARD_WITH_ID);
+
         //matcher.addURI(authority, ItemsContract.PATH_ITEMS + "/*", ITEMS_WITH_ID);
 
         //matcher.addURI(authority, matcher.PATH_LOCATION, LOCATION);
@@ -88,6 +93,21 @@ public class ItemsProvider extends ContentProvider {
                 return retCursor;
                 //break;
             }
+            case CARDS: {
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        ItemsContract.CardsEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+//                        ItemsContract.CardsEntry.COLUMN_ITEM_KEY + " = ?",
+//                        new String[]{String.valueOf(ContentUris.parseId(uri))},
+                        null,
+                        null,
+                        sortOrder
+                );
+                retCursor.setNotificationUri(getContext().getContentResolver(), uri);
+                return retCursor;
+            }
 
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
@@ -104,6 +124,10 @@ public class ItemsProvider extends ContentProvider {
                 return ItemsContract.ItemsEntry.CONTENT_TYPE;
             case ITEM_WITH_ID:
                 return ItemsContract.ItemsEntry.CONTENT_ITEM_TYPE;
+            case CARDS:
+                return ItemsContract.CardsEntry.CONTENT_TYPE;
+            case CARD_WITH_ID:
+                return ItemsContract.CardsEntry.CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -124,6 +148,13 @@ public class ItemsProvider extends ContentProvider {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 break;
             }
+            case CARDS:
+                long _id = db.insert(ItemsContract.CardsEntry.TABLE_NAME, null, values);
+                if ( _id >0)
+                    returnUri = ItemsContract.CardsEntry.buildCardUri(uri, _id);
+                else
+                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -139,6 +170,8 @@ public class ItemsProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
         int rowsDeleted;
 
+        long id = ContentUris.parseId(uri);
+
         if (null == selection)
         {
             selection = "1";
@@ -148,7 +181,19 @@ public class ItemsProvider extends ContentProvider {
             case ITEMS:
                 rowsDeleted = db.delete(ItemsContract.ItemsEntry.TABLE_NAME, selection, selectionArgs);
                 break;
-
+            case ITEM_WITH_ID:
+                selection = ItemsContract.ItemsEntry._ID + " = ?";
+                selectionArgs = new String[]{String.valueOf(id)};
+                rowsDeleted = db.delete(ItemsContract.ItemsEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+            case CARDS:
+                rowsDeleted = db.delete(ItemsContract.CardsEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+            case CARD_WITH_ID:
+                selection = ItemsContract.CardsEntry._ID + " = ?";
+                selectionArgs = new String[]{String.valueOf(id)};
+                rowsDeleted = db.delete(ItemsContract.CardsEntry.TABLE_NAME, selection, selectionArgs);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -180,6 +225,9 @@ public class ItemsProvider extends ContentProvider {
                         //selection, selectionArgs);
                         ItemsContract.ItemsEntry._ID + " = ?",
                         new String[]{String.valueOf(ContentUris.parseId(uri))});
+                break;
+            case CARDS:
+                rowsUpdated = db.update(ItemsContract.CardsEntry.TABLE_NAME, values,selection, selectionArgs);
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);

@@ -2,6 +2,7 @@ package com.example.android.project7;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -21,13 +22,12 @@ public class ItemsGridAdapter
     final private Context mContext;
     final private ItemsGridAdapterOnClickHandler mClickHandler;
 
-    public class ItemsGridAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        public String mNameString;
+    public class ItemsGridAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener,View.OnLongClickListener {
 
         public final CardView mView;
         public final ImageView mAvatar;
         public final TextView mTextView;
-        public final CheckableLinearLayout mCheckableLayout;
+//        public final LinearLayout mCheckableLayout;
 
         public ItemsGridAdapterViewHolder(View v) {
             super(v);
@@ -35,8 +35,9 @@ public class ItemsGridAdapter
             mAvatar = (ImageView) v.findViewById(R.id.avatar);
             mTextView = (TextView) v.findViewById(R.id.text1);
             //mCheckbox = (ImageView) v.findViewById(R.id.checkbox);
-            mCheckableLayout = (CheckableLinearLayout) v.findViewById(R.id.checkable_layout);
+//            mCheckableLayout = (LinearLayout) v.findViewById(R.id.linear_layout);
             v.setOnClickListener(this);
+            v.setOnLongClickListener(this);
         }
 
         @Override
@@ -50,7 +51,15 @@ public class ItemsGridAdapter
             mCursor.moveToPosition(adapterPosition);
             int idColumnIndex = mCursor.getColumnIndex(ItemsContract.ItemsEntry._ID);
             mClickHandler.onClick(mCursor.getLong(idColumnIndex), this);
-            mCheckableLayout.toggle();
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            int adapterPosition = getAdapterPosition();
+            mCursor.moveToPosition(adapterPosition);
+            int idColumnIndex = mCursor.getColumnIndex(ItemsContract.ItemsEntry._ID);
+            mClickHandler.onLongClick(mCursor.getLong(idColumnIndex));
+            return true;
         }
     }
 
@@ -60,6 +69,7 @@ public class ItemsGridAdapter
 
     public static interface ItemsGridAdapterOnClickHandler {
         void onClick(Long id, ItemsGridAdapterViewHolder vh);
+        void onLongClick(Long id);
     }
 
 //    public ItemsGridAdapter(Context context, Cursor cursor, int flags, int loaderID){
@@ -88,38 +98,46 @@ public class ItemsGridAdapter
 
     @Override
     public void onBindViewHolder(ItemsGridAdapterViewHolder holder, int position) {
-        mCursor.moveToPosition(position);
-        final int photo;
-        final String name;
-        //holder.mNameString
-//        if(!mCursor.isLast()) {
-//            mCursor.moveToNext();
-//        }else{
-//            mCursor.moveToFirst();
-//        }
-        name = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_NAME));
-        holder.mTextView.setText(name);
-        photo = mCursor.getInt(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID));
+        if(mCursor != null && mCursor.moveToFirst()){
+            Log.d("TAG", "item count is " + getItemCount());
+            mCursor.moveToPosition(position);
+            final int photo;
+            final String name, photoUrl;
+            name = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_NAME));
+            holder.mTextView.setText(name);
+            photo = mCursor.getInt(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID));
+            photoUrl = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1));
 
-        Log.d("IGA", "OnBindViewHolder ran " + " and photo, name " + photo + ", " + name);
+            Log.d("IGA", "OnBindViewHolder ran " + " and photo, name " + photo + ", " + name);
 
-        Log.d("IGA", "OnBindViewHolder ran " + " position = " + position);
+            Log.d("IGA", "OnBindViewHolder ran " + " position = " + position);
 
 
-//            public void onClick(View v) {
-//                Context context = v.getContext();
-//                Intent intent = new Intent(context, ItemDetailActivity.class);
-//                intent.putExtra(ItemDetailActivity.EXTRA_NAME, name);
-//                intent.putExtra(ItemDetailActivity.EXTRA_PHOTO, photo);
-//                //intent.putExtra(ItemDetailActivity.EXTRA_DESCRIPTION, description);
-//
-//                context.startActivity(intent);
-//            }
+    //            public void onClick(View v) {
+    //                Context context = v.getContext();
+    //                Intent intent = new Intent(context, ItemDetailActivity.class);
+    //                intent.putExtra(ItemDetailActivity.EXTRA_NAME, name);
+    //                intent.putExtra(ItemDetailActivity.EXTRA_PHOTO, photo);
+    //                //intent.putExtra(ItemDetailActivity.EXTRA_DESCRIPTION, description);
+    //
+    //                context.startActivity(intent);
+    //            }
 
-        Glide.with(holder.mAvatar.getContext())
-                .load(photo)
-                .fitCenter()
-                .into(holder.mAvatar);
+            if (photoUrl != null && !photoUrl.equals("")) {
+                Log.d("TAG", "Glide ran with photo url" + photoUrl);
+                Uri photoUri = Uri.parse(photoUrl);
+                Glide.with(holder.mAvatar.getContext())
+                        .load(photoUri)
+                        .fitCenter()
+                        .into(holder.mAvatar);
+            }else{
+                Log.d("TAG", "Glide ran with photo int " + photo);
+                Glide.with(holder.mAvatar.getContext())
+                        .load(photo)
+                        .fitCenter()
+                        .into(holder.mAvatar);
+            }
+        }
     }
 
     @Override

@@ -7,4 +7,5 @@
     <dimen name="list_item_avatar_size">140dp</dimen>
     <dimen name="card_margin">16dp</dimen>
     <dimen name="card_view_default_margin">4dp</dimen>
+    <dimen name="extra_card_view_default_margin">8dp</dimen>
 </resources>

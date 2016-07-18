@@ -17,7 +17,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/item_settings"
-        android:title="@string/item_settings"
+        android:id="@+id/add_card"
+        android:title="@string/add_card"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/edit_item"
+        android:title="@string/edit_item"
         app:showAsAction="never" />
 </menu>

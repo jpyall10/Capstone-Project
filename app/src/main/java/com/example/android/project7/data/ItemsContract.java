@@ -22,6 +22,7 @@ public class ItemsContract {
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
     public static final String PATH_ITEMS = "items";
+    public static final String PATH_CARDS = "cards";
 
     public static final class ItemsEntry implements BaseColumns {
 
@@ -30,29 +31,9 @@ public class ItemsContract {
         //public static final String COLUMN_ID = "item_id";
         public static final String COLUMN_NAME = "item_name";
         public static final String COLUMN_CATEGORY = "category";
-        //public static final String COLUMN_FAVORITES = "favorites";
-
-        //public static final String COLUMN_DETAIL_1 = "item_detail_1";
-
+//        public static final String COLUMN_CARD_KEY = "card_key";
         public static final String COLUMN_PHOTO_RES_ID = "photo_res_id";
         public static final String COLUMN_PHOTO_EXTRA_1 = "photo_extra_1";
-//        public static final String COLUMN_EXTRA_PIC_URI_1 = "extra_pic_1";
-        public static final String COLUMN_EXTRA_CARD_LABEL_1 = "card_label_1";
-        public static final String COLUMN_EXTRA_CARD_DESCRIPTION_1 = "card_description_1";
-        public static final String COLUMN_EXTRA_CARD_PHOTO_1 = "card_photo_1";
-
-        public static final String COLUMN_EXTRA_CARD_LABEL_2 = "card_label_2";
-        public static final String COLUMN_EXTRA_CARD_DESCRIPTION_2 = "card_description_2";
-        public static final String COLUMN_EXTRA_CARD_PHOTO_2 = "card_photo_2";
-
-        public static final String COLUMN_EXTRA_CARD_LABEL_3 = "card_label_3";
-        public static final String COLUMN_EXTRA_CARD_DESCRIPTION_3 = "card_description_3";
-        public static final String COLUMN_EXTRA_CARD_PHOTO_3 = "card_photo_3";
-
-        public static final String COLUMN_EXTRA_CARD_LABEL_4 = "card_label_4";
-        public static final String COLUMN_EXTRA_CARD_DESCRIPTION_4 = "card_description_4";
-        public static final String COLUMN_EXTRA_CARD_PHOTO_4 = "card_photo_4";
-
 
 
 
@@ -69,5 +50,50 @@ public class ItemsContract {
         public static Uri buildItemUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
+
+        public static long getIdFromUri(Uri contentUri){
+            return ContentUris.parseId(contentUri);
+        }
+
+
+    }
+
+    public static final class CardsEntry implements BaseColumns {
+
+        public static final String TABLE_NAME = "cards";
+
+        public static final String COLUMN_ITEM_ID = "item_id";
+        //public static final String COLUMN_NAME = "card_name";
+        public static final String COLUMN_ITEM_KEY = "item_key";
+
+        public static final String COLUMN_EXTRA_CARD_LABEL = "card_label";
+        public static final String COLUMN_EXTRA_CARD_DESCRIPTION = "card_description";
+        public static final String COLUMN_EXTRA_CARD_PHOTO = "card_photo";
+
+//        public static final Uri CONTENT_URI =
+//                BASE_CONTENT_URI.buildUpon().appendPath(PATH_CARDS).build();
+
+        public static final String CONTENT_TYPE =
+                ItemsEntry.CONTENT_TYPE + "/" + PATH_CARDS;
+        public static final String CONTENT_ITEM_TYPE =
+                ItemsEntry.CONTENT_ITEM_TYPE + "/" + PATH_CARDS + "/#";
+
+
+
+        public static Uri buildCardsByItemUri(Uri itemUri) {
+            return itemUri.buildUpon().appendPath(PATH_CARDS).build();
+            //ContentUris.withAppendedId(CONTENT_URI, itemId);
+        }
+
+        public static Uri buildCardUri(Uri itemUri, long cardId){
+            Uri returnUri = ContentUris.withAppendedId(buildCardsByItemUri(itemUri),cardId);
+            return returnUri;
+        }
+
+//        public static Long getIdFromUri(Uri contentUri){
+//            return ContentUris.parseId(contentUri);
+//        }
+
+
     }
 }
