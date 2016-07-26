@@ -2,6 +2,7 @@ package com.example.android.project7;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -9,29 +10,33 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.example.android.project7.data.ItemsContract;
+import com.squareup.picasso.Picasso;
+//import com.facebook.drawee.view.SimpleDraweeView;
 
 public class ItemsGridAdapter
         extends RecyclerView.Adapter<ItemsGridAdapter.ItemsGridAdapterViewHolder> {
 
+    //private static final float ASPECT_RATIO = 4.0f/3;
     private Cursor mCursor;
     final private Context mContext;
     final private ItemsGridAdapterOnClickHandler mClickHandler;
 
     public class ItemsGridAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener,View.OnLongClickListener {
 
-        public final CardView mView;
+        //public final CardView mView;
         public final ImageView mAvatar;
         public final TextView mTextView;
 //        public final LinearLayout mCheckableLayout;
 
         public ItemsGridAdapterViewHolder(View v) {
             super(v);
-            mView = (CardView)v.findViewById(R.id.card_view);
+            //mView = (CardView)v.findViewById(R.id.card_view);
             mAvatar = (ImageView) v.findViewById(R.id.avatar);
             mTextView = (TextView) v.findViewById(R.id.text1);
             //mCheckbox = (ImageView) v.findViewById(R.id.checkbox);
@@ -108,35 +113,56 @@ public class ItemsGridAdapter
             photo = mCursor.getInt(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID));
             photoUrl = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1));
 
-            Log.d("IGA", "OnBindViewHolder ran " + " and photo, name " + photo + ", " + name);
-
-            Log.d("IGA", "OnBindViewHolder ran " + " position = " + position);
-
-
-    //            public void onClick(View v) {
-    //                Context context = v.getContext();
-    //                Intent intent = new Intent(context, ItemDetailActivity.class);
-    //                intent.putExtra(ItemDetailActivity.EXTRA_NAME, name);
-    //                intent.putExtra(ItemDetailActivity.EXTRA_PHOTO, photo);
-    //                //intent.putExtra(ItemDetailActivity.EXTRA_DESCRIPTION, description);
-    //
-    //                context.startActivity(intent);
-    //            }
-
+            Uri photoUri;
+            int height, width;
             if (photoUrl != null && !photoUrl.equals("")) {
                 Log.d("TAG", "Glide ran with photo url" + photoUrl);
-                Uri photoUri = Uri.parse(photoUrl);
-                Glide.with(holder.mAvatar.getContext())
-                        .load(photoUri)
-                        .fitCenter()
-                        .into(holder.mAvatar);
+                photoUri = Uri.parse(photoUrl);
+//                holder.mAvatar.setImageURI(photoUri);
+
             }else{
                 Log.d("TAG", "Glide ran with photo int " + photo);
-                Glide.with(holder.mAvatar.getContext())
-                        .load(photo)
-                        .fitCenter()
-                        .into(holder.mAvatar);
+                photoUri = Uri.parse("android.resource://com.example.android.project7/" + photo);
+//                holder.mAvatar.setImageURI(photoUri);
             }
+//            Picasso.with(holder.mAvatar.getContext()) //
+//                    .load(photoUri) //
+//                    .placeholder(R.drawable.v_face) //
+////                    .error(R.drawable.error) //
+////                    .fit() //
+////                    .tag(context) //
+//                    .into(holder.mAvatar);
+            Glide.with(holder.mAvatar.getContext())
+                    .load(photoUri)
+                    .fitCenter()
+                    .into(holder.mAvatar);
+
+
+//            final ImageView avatar = holder.mAvatar;
+//            //final TextView nameBox = holder.mTextView;
+//            ViewTreeObserver vto = avatar.getViewTreeObserver();
+//            vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+//                public boolean onPreDraw() {
+//                    int finalHeight,finalWidth;
+//                    avatar.getViewTreeObserver().removeOnPreDrawListener(this);
+//                    finalHeight = avatar.getMeasuredHeight();
+//                    finalWidth = avatar.getMeasuredWidth();
+//                    return true;
+//                }
+//            });
+
+
+//            height = holder.mAvatar.getHeight();
+//            width = holder.mAvatar.getWidth();
+
+            Log.d("IGA", "OnBindViewHolder ran " + " and photo, name " + photo + ", " + name);
+
+//            Log.d("IGA", "OnBindViewHolder ran " + " position = " + position + "height, width: " + height + ", " + width);
+
+            //holder.mAvatar.setAspectRatio(ASPECT_RATIO);
+            //holder.mAvatar.setImageURI(uri);
+            //holder.mAvatar.setTransitionName(getString(R.string.transition_image) +
+            //        position);
         }
     }
 
@@ -161,7 +187,7 @@ public class ItemsGridAdapter
     public void selectView(RecyclerView.ViewHolder viewHolder){
         if (viewHolder instanceof ItemsGridAdapterViewHolder){
             ItemsGridAdapterViewHolder ivh = (ItemsGridAdapterViewHolder) viewHolder;
-            ivh.onClick(ivh.mView);
+            ivh.onClick(ivh.mAvatar);
         }
     }
 

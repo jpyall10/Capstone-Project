@@ -145,18 +145,6 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
 
                 b.setView(layout);
 
-//				Spinner categoryBox = (Spinner)ItemsGridFragment.this.getActivity().findViewById(R.id.set_category_spinner);
-//				final ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(ItemsGridFragment.this.getContext(),
-//						android.R.layout.simple_spinner_item, categories);
-//				categoryBox.setAdapter(spinnerAdapter);
-//				categoryBox.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//					@Override
-//					public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//						final String category = parent.getItemAtPosition(position).toString();
-//						cv.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, category);
-//					}
-//				});
-
                 b.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int whichButton) {
@@ -181,23 +169,10 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
                 });
                 b.setNegativeButton("CANCEL", null);
                 b.create().show();
-
-//				b.setTitle("Please enter an item name");
-//				b.setView(input);
-//				b.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-//					@Override
-//					public void onClick(DialogInterface dialog, int whichButton) {
-//						// SHOULD NOW WORK
-//						String name = input.getText().toString();
-//						cv.put(ItemsContract.ItemsEntry.COLUMN_NAME, name);
-//					}
-//				});
-//				b.setNegativeButton("CANCEL", null);
-//				b.create().show();
-
-
-
                 break;
+            case android.R.id.home:
+                getActivity().onBackPressed();
+                return true;
             default:
         }
         return true;

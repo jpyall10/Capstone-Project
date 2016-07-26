@@ -66,81 +66,6 @@
             android:layout_height="match_parent"
             app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-            <!--<android.support.v7.widget.RecyclerView-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="match_parent"-->
-                <!--android:id="@+id/item_recyclerview">-->
-            <!--</android.support.v7.widget.RecyclerView>-->
-            <!--<LinearLayout-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="match_parent"-->
-                <!--android:orientation="vertical"-->
-                <!--android:paddingTop="24dp">-->
-
-                <!--<android.support.v7.widget.CardView-->
-                    <!--android:id="@+id/extra_card_1"-->
-                    <!--android:layout_width="match_parent"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:visibility="gone"-->
-                    <!--android:layout_margin="@dimen/card_margin">-->
-
-                    <!--<LinearLayout-->
-                        <!--style="@style/Widget.CardContent"-->
-                        <!--android:layout_width="match_parent"-->
-                        <!--android:layout_height="wrap_content">-->
-
-                        <!--<TextView-->
-                            <!--android:id="@+id/card_label_1"-->
-                            <!--android:layout_width="match_parent"-->
-                            <!--android:layout_height="wrap_content"-->
-                            <!--android:textAppearance="@style/TextAppearance.AppCompat.Title" />-->
-                        <!--&lt;!&ndash;android:text="Description"&ndash;&gt;-->
-
-                        <!--<TextView-->
-                            <!--android:id="@+id/card_description_1"-->
-                            <!--android:layout_width="match_parent"-->
-                            <!--android:layout_height="wrap_content"-->
-                            <!--android:textAppearance="@style/TextAppearance.AppCompat.Body1" />-->
-
-                    <!--</LinearLayout>-->
-
-                <!--</android.support.v7.widget.CardView>-->
-
-                <!--&lt;!&ndash;<android.support.v7.widget.CardView&ndash;&gt;-->
-                    <!--&lt;!&ndash;android:layout_width="match_parent"&ndash;&gt;-->
-                    <!--&lt;!&ndash;android:layout_height="wrap_content"&ndash;&gt;-->
-                    <!--&lt;!&ndash;android:layout_margin="@dimen/card_margin">&ndash;&gt;-->
-
-                    <!--&lt;!&ndash;<LinearLayout&ndash;&gt;-->
-                        <!--&lt;!&ndash;style="@style/Widget.CardContent"&ndash;&gt;-->
-                        <!--&lt;!&ndash;android:layout_width="match_parent"&ndash;&gt;-->
-                        <!--&lt;!&ndash;android:layout_height="match_parent">&ndash;&gt;-->
-
-                        <!--&lt;!&ndash;<Button&ndash;&gt;-->
-                            <!--&lt;!&ndash;android:layout_width="wrap_content"&ndash;&gt;-->
-                            <!--&lt;!&ndash;android:layout_height="wrap_content"&ndash;&gt;-->
-                            <!--&lt;!&ndash;android:text="@string/take_photo"&ndash;&gt;-->
-                            <!--&lt;!&ndash;android:id="@+id/takePhoto"&ndash;&gt;-->
-                            <!--&lt;!&ndash;android:onClick="onTakePhotoClick"&ndash;&gt;-->
-                            <!--&lt;!&ndash;android:layout_gravity="center"&ndash;&gt;-->
-                            <!--&lt;!&ndash;android:layout_alignParentStart="true"&ndash;&gt;-->
-                            <!--&lt;!&ndash;android:layout_alignParentLeft="true"&ndash;&gt;-->
-                            <!--&lt;!&ndash;android:layout_alignParentTop="true" />&ndash;&gt;-->
-
-                        <!--&lt;!&ndash;<ImageView&ndash;&gt;-->
-                            <!--&lt;!&ndash;android:layout_width="match_parent"&ndash;&gt;-->
-                            <!--&lt;!&ndash;android:layout_height="wrap_content"&ndash;&gt;-->
-                            <!--&lt;!&ndash;android:scaleType="centerCrop"&ndash;&gt;-->
-                            <!--&lt;!&ndash;android:id="@+id/imageView"&ndash;&gt;-->
-                            <!--&lt;!&ndash;/>&ndash;&gt;-->
-                            <!--&lt;!&ndash;&lt;!&ndash;android:src="@drawable/v_face" />&ndash;&gt;&ndash;&gt;-->
-
-                    <!--&lt;!&ndash;</LinearLayout>&ndash;&gt;-->
-
-                <!--&lt;!&ndash;</android.support.v7.widget.CardView>&ndash;&gt;-->
-
-            <!--</LinearLayout>-->
-
         <!--</android.support.v4.widget.NestedScrollView>-->
 
         <android.support.design.widget.FloatingActionButton
@@ -149,7 +74,7 @@
             android:layout_width="wrap_content"
             app:layout_anchor="@id/appbar"
             app:layout_anchorGravity="bottom|right|end"
-            android:src="@drawable/ic_discuss"
+            android:src="@drawable/ic_play_arrow_24dp"
             android:layout_margin="@dimen/fab_margin"
             android:clickable="true"
             android:onClick="onFabClick"/>

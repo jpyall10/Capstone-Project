@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,13 +19,17 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.example.android.project7.data.ItemsContract;
+import com.facebook.drawee.backends.pipeline.Fresco;
 
 public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 	private final String LOG_TAG = this.getClass().getSimpleName();
@@ -77,6 +82,7 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 	@Override
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
+//		Fresco.initialize(this.getActivity());
 		setHasOptionsMenu(true);
 		Bundle args = getArguments();
 		if (args != null){
@@ -91,6 +97,49 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 		inflater.inflate(R.menu.itemsgridfragment, menu);
 	}
 
+	private String[] getNames(){
+		Cursor c = getActivity().getContentResolver().query(
+				ItemsContract.ItemsEntry.CONTENT_URI,
+				new String[]{ItemsContract.ItemsEntry.COLUMN_NAME},
+				null,null,null,null);
+		if(c != null) {
+			String[] names = new String[c.getCount()];
+			c.moveToFirst();
+			for (int i = 0; i < c.getCount(); i++) {
+				names[i] = c.getString(c.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_NAME));
+				c.moveToNext();
+			}
+			c.close();
+			return names;
+		}
+		else{
+			return null;
+		}
+	}
+
+	private ArrayList<String> getCategories(){
+		Cursor c = getActivity().getContentResolver().query(
+				ItemsContract.ItemsEntry.CONTENT_URI,
+				new String[]{ItemsContract.ItemsEntry.COLUMN_CATEGORY},
+				null,null,null,null);
+		if(c != null) {
+			ArrayList<String> categories = new ArrayList<>();
+			c.moveToFirst();
+			String category;
+			for (int i = 0; i < c.getCount(); i++) {
+				category = c.getString(c.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_CATEGORY));
+				if (!categories.contains(category)){
+					categories.add(category);
+				}
+				c.moveToNext();
+			}
+			c.close();
+			return categories;
+		}
+		else{
+			return null;
+		}
+	}
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item){
 		int id = item.getItemId();
@@ -104,14 +153,22 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 				LinearLayout layout = new LinearLayout(ItemsGridFragment.this.getContext());
 				layout.setOrientation(LinearLayout.VERTICAL);
 
+				String[] names = getNames();
+				ArrayAdapter<String> adapter = new ArrayAdapter<String>(this.getActivity(),android.R.layout.simple_list_item_1,names);
 
-				final EditText nameBox = new EditText(ItemsGridFragment.this.getContext());
+
+				final AutoCompleteTextView nameBox = new AutoCompleteTextView(ItemsGridFragment.this.getContext());
+				nameBox.setAdapter(adapter);
 				nameBox.setHint("Name");
 				layout.addView(nameBox);
 
+				ArrayList<String> categories = getCategories();
+				ArrayAdapter<String> adapter2 = new ArrayAdapter<String>(this.getActivity(),android.R.layout.simple_list_item_1,categories);
 
-				final EditText categoryBox = new EditText(ItemsGridFragment.this.getContext());
-				categoryBox.setHint("Category");
+
+				final AutoCompleteTextView categoryBox = new AutoCompleteTextView(ItemsGridFragment.this.getContext());
+				categoryBox.setHint("Category (Required)");
+				categoryBox.setAdapter(adapter2);
 				layout.addView(categoryBox);
 
 				final EditText photoUrlBox = new EditText(ItemsGridFragment.this.getContext());
@@ -188,7 +245,9 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 
 		mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerview);
 
-		mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
+		StaggeredGridLayoutManager sglm = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+		sglm.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS);
+		mRecyclerView.setLayoutManager(sglm);
 		final long mLong = 0;
 
 		mItemsGridAdapter = new ItemsGridAdapter(getActivity(),new ItemsGridAdapter.ItemsGridAdapterOnClickHandler(){
@@ -206,11 +265,11 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 
 
 		});
-//		mItemsGridAdapter.hasStableIds();
 
 		//mRecyclerView.setHasFixedSize(true);
+		//mItemsGridAdapter.setHasStableIds(true);
+
 		mRecyclerView.setAdapter(mItemsGridAdapter);
-		//setupRecyclerView(mRecyclerView);
 		return rootView;
 	}
 
@@ -262,6 +321,7 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 			insertStarterData();
 			Log.d("TAG", "insertStarterData ran");
 		}
+
 		mItemsGridAdapter.swapCursor(data);
 	}
 

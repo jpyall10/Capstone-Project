@@ -137,6 +137,7 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 		//final MediaPlayer mp = MediaPlayer.create(this, R.raw.dogs_barking);
 
 		fab = (FloatingActionButton)findViewById(R.id.fab);
+		//fab.setImageURI(Uri.parse("android.resource://com.example.android.project7/R.drawable.ic_add_24dp"));
 		fab.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
@@ -326,6 +327,7 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 		ContentValues cv = new ContentValues();
 		cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, picUri.toString());
 		int updated = getContentResolver().update(itemUri,cv,null,null);
+
 		Log.d("TAG", "updated = " + updated);
 	}
 
@@ -354,7 +356,9 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 				mCursor.moveToFirst();
 				String uriString = 	mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1));
 				//mCursor.close();
-				loadBackdrop(uriString);
+				if(uriString != null){
+					loadBackdrop(uriString);
+				}
 				//c.close();
 
 //				imgPreview.setImageURI(Uri.parse(uriString));

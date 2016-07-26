@@ -108,6 +108,7 @@ public class MainActivity extends AppCompatActivity implements ItemsGridFragment
 
 
         mViewPager.setAdapter(mAdapter);
+        c.close();
 
     }
 
