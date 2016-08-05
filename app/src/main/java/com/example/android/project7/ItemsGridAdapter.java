@@ -1,6 +1,7 @@
 package com.example.android.project7;
 
 import android.content.Context;
+import android.content.SyncAdapterType;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -11,12 +12,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.android.project7.data.ItemsContract;
 import com.squareup.picasso.Picasso;
+
+import java.io.File;
 //import com.facebook.drawee.view.SimpleDraweeView;
 
 public class ItemsGridAdapter
@@ -41,8 +46,10 @@ public class ItemsGridAdapter
             mTextView = (TextView) v.findViewById(R.id.text1);
             //mCheckbox = (ImageView) v.findViewById(R.id.checkbox);
 //            mCheckableLayout = (LinearLayout) v.findViewById(R.id.linear_layout);
-            v.setOnClickListener(this);
             v.setOnLongClickListener(this);
+            v.setOnClickListener(this);
+            mTextView.setOnClickListener(this);
+//            mTextView.setOnClickListener(this);
         }
 
         @Override
@@ -54,8 +61,17 @@ public class ItemsGridAdapter
         public void onClick(View v) {
             int adapterPosition = getAdapterPosition();
             mCursor.moveToPosition(adapterPosition);
-            int idColumnIndex = mCursor.getColumnIndex(ItemsContract.ItemsEntry._ID);
-            mClickHandler.onClick(mCursor.getLong(idColumnIndex), this);
+            if(mTextView == v) {
+                try{
+                    String name = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_NAME));
+                    MainActivity.readText(name);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }else{
+                int idColumnIndex = mCursor.getColumnIndex(ItemsContract.ItemsEntry._ID);
+                mClickHandler.onClick(mCursor.getLong(idColumnIndex), this);
+            }
         }
 
         @Override
@@ -106,13 +122,13 @@ public class ItemsGridAdapter
         if(mCursor != null && mCursor.moveToFirst()){
             Log.d("TAG", "item count is " + getItemCount());
             mCursor.moveToPosition(position);
-            final int photo;
+//            final int photo;
             final String name, photoUrl;
             name = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_NAME));
             holder.mTextView.setText(name);
-            photo = mCursor.getInt(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID));
+//            photo = mCursor.getInt(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID));
             photoUrl = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1));
-
+            Log.d("IGA", "photo url = " + photoUrl + " at position " + position);
             Uri photoUri;
             int height, width;
             if (photoUrl != null && !photoUrl.equals("")) {
@@ -120,10 +136,14 @@ public class ItemsGridAdapter
                 photoUri = Uri.parse(photoUrl);
 //                holder.mAvatar.setImageURI(photoUri);
 
-            }else{
-                Log.d("TAG", "Glide ran with photo int " + photo);
-                photoUri = Uri.parse("android.resource://com.example.android.project7/" + photo);
-//                holder.mAvatar.setImageURI(photoUri);
+            }
+////            else if (photo > 0){
+////                Log.d("TAG", "Glide ran with photo int " + photo);
+////                photoUri = Uri.parse("android.resource://com.example.android.project7/" + photo);
+//////                holder.mAvatar.setImageURI(photoUri);
+            else{
+                photoUri = Uri.parse("android.resource://com.example.android.project7/" + R.drawable.v_face);
+                Log.d("TAG", "Glide ran with photouri " + photoUri);
             }
 //            Picasso.with(holder.mAvatar.getContext()) //
 //                    .load(photoUri) //
@@ -133,7 +153,7 @@ public class ItemsGridAdapter
 ////                    .tag(context) //
 //                    .into(holder.mAvatar);
             Glide.with(holder.mAvatar.getContext())
-                    .load(photoUri)
+                    .load(photoUrl)
                     .fitCenter()
                     .into(holder.mAvatar);
 
@@ -155,7 +175,7 @@ public class ItemsGridAdapter
 //            height = holder.mAvatar.getHeight();
 //            width = holder.mAvatar.getWidth();
 
-            Log.d("IGA", "OnBindViewHolder ran " + " and photo, name " + photo + ", " + name);
+            Log.d("IGA", "OnBindViewHolder ran " + " and photo, name " + photoUrl + ", " + name);
 
 //            Log.d("IGA", "OnBindViewHolder ran " + " position = " + position + "height, width: " + height + ", " + width);
 

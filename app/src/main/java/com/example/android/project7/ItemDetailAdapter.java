@@ -54,11 +54,16 @@ public class ItemDetailAdapter extends RecyclerView.Adapter<ItemDetailAdapter.It
             mCursor.moveToPosition(adapterPosition);
             int idColumnIndex = mCursor.getColumnIndex(ItemsContract.CardsEntry._ID);
             mClickHandler.onClick(mCursor.getLong(idColumnIndex), this);
+            Log.d("IDA","this happened and id = " + mCursor.getLong(idColumnIndex));
         }
 
         @Override
         public boolean onLongClick(View v) {
-            return false;
+            int adapterPosition = getAdapterPosition();
+            mCursor.moveToPosition(adapterPosition);
+            int idColumnIndex = mCursor.getColumnIndex(ItemsContract.CardsEntry._ID);
+            mClickHandler.onLongClick(mCursor.getLong(idColumnIndex));
+            return true;
         }
     }
 

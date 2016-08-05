@@ -20,8 +20,6 @@
         android:id="@+id/add_card"
         android:title="@string/add_card"
         app:showAsAction="ifRoom" />
-    <item
-        android:id="@+id/edit_item"
-        android:title="@string/edit_item"
-        app:showAsAction="never" />
+    <!--android:title="@string/edit_mode_off"-->
+
 </menu>

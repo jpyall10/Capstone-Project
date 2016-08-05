@@ -7,10 +7,10 @@
     <string name="add_item">Add Item</string>
 
 
-    <string name="category_people">People</string>
-    <string name="category_animals">Animals</string>
-    <string name="category_food">Food</string>
-    <string name="item_name_label">Name</string>
+    <string name="category_people">people</string>
+    <string name="category_animals">animals</string>
+    <string name="category_food">food</string>
+    <string name="item_name_label">name</string>
     <string name="animal_label_cat">cat</string>
     <string name="animal_label_cow">cow</string>
     <string name="animal_label_dog">dog</string>
@@ -18,44 +18,50 @@
     <string name="animal_label_elephant">elephant</string>
     <string name="animal_label_lion">lion</string>
     <string name="animal_label_squirrel">squirrel</string>
-    <string name="person_name_label">Name</string>
-
-    <string name="person_name_dad">Dad</string>
-    <string name="person_name_mom">Mom</string>
-    <string name="person_name_grandpa_bones">Grandpa Bones</string>
-    <string name="person_name_grandpa_porter">Grandpa Porter</string>
-    <string name="person_name_grandma_amy">Grandma Amy</string>
-    <string name="person_name_grandma_carmen">Grandma Carmen</string>
-    <string name="person_name_uncle_tone">Uncle Tone</string>
-    <string name="person_name_uncle_vinnie">Uncle Vinnie</string>
-    <string name="person_name_aunt_mel">Aunt Melly</string>
 
 
-    <string name="person_name_brother">Brother</string>
-    <string name="person_name_sister">Sister</string>
+    <string name="person_name_grandpa_bones">grandpa bones</string>
+    <string name="person_name_grandpa_porter">grandpa porter</string>
+    <string name="person_name_grandma_amy">grandma amy</string>
+    <string name="person_name_grandma_carmen">grandma carmen</string>
+    <string name="person_name_uncle_tone">uncle tone</string>
+    <string name="person_name_uncle_vinnie">uncle vinnie</string>
+    <string name="person_name_aunt_mel">aunt melly</string>
+    <string name="person_name_cousin_rachel">rachel</string>
+    <string name="person_name_cousin_porter">porter</string>
+    <string name="person_name_cousin_sophia">sophia</string>
+    <string name="person_name_aunt_pam">aunt pam</string>
+    <string name="person_name_aunt_debi">aunt debi</string>
+    <string name="person_name_aunt_punkin">aunt punkin</string>
 
-    <string name="food_name_apple">Apple</string>
-    <string name="food_name_banana">Banana</string>
-    <string name="food_name_brocolli">Broccoli</string>
+    <string name="person_name_dad">dad</string>
+    <string name="person_name_mom">mommy</string>
+    <string name="person_name_brother">brother</string>
+    <string name="person_name_sister">sister</string>
+    <string name="person_name_aunt">aunt</string>
+    <string name="person_name_uncle">uncle</string>
+    <string name="person_name_grandpa">grandpa</string>
+    <string name="person_name_grandma">grandma</string>
 
-    <string name="food_name_grapes">Grapes</string>
-    <string name="food_name_oranges">Oranges</string>
-    <string name="food_name_peas">Peas</string>
-    <string name="food_name_strawberries">Strawberries</string>
-    <string name="food_name_tomatoes">Tomatoes</string>
+    <string name="food_name_apple">apple</string>
+    <string name="food_name_banana">banana</string>
+    <string name="food_name_brocolli">brocolli</string>
+
+    <string name="food_name_grapes">grapes</string>
+    <string name="food_name_oranges">oranges</string>
+    <string name="food_name_peas">peas</string>
+    <string name="food_name_strawberries">strawberries</string>
+    <string name="food_name_tomatoes">tomatoes</string>
 
 
 
     <string name="default_columns">2</string>
-    <string name="person_name_cousin_rachel">Rachel</string>
-    <string name="person_name_cousin_porter">Porter</string>
-    <string name="person_name_cousin_sophia">Sophia</string>
-    <string name="person_name_aunt_pam">Aunt Pam</string>
-    <string name="person_name_aunt_debi">Aunt Debi</string>
+
+
     <string name="take_photo">Take a Photo</string>
-    <string name="person_name_aunt_punkin">Aunt Punkin</string>
     <string name="edit_item">Edit Item</string>
     <string name="add_category">Add Category</string>
+
     <string name="set_category_label">Set Category:</string>
     <string name="set_name_label">Set Name:</string>
     <string name="set_photo_label">Set Photo:</string>
@@ -63,4 +69,8 @@
     <string name="save_item">Save</string>
     <string name="delete_item">Delete</string>
     <string name="add_card">Add Info</string>
+
+    <string name="edit_mode_off">Edit Mode</string>
+    <string name="edit_mode_on">Exit Edit Mode</string>
+    <string name="android_resource_uri_base">android.resource://com.example.android.project7/</string>
 </resources>

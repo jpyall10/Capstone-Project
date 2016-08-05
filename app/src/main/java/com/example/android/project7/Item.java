@@ -10,15 +10,17 @@ public class Item {
 
 	private String name;
 	private String category;
+	private String photoUriString;
 	private int photo;
 	private static Context context;
 
 	private static final Random RANDOM = new Random();
 
-	public Item(Context context, String name, int photo, String category) {
+	public Item(Context context, String name,String photoUriString, String category) {
 		this.context = context;
 		this.name = name;
-		this.photo = photo;
+//		this.photo = photo;
+		this.photoUriString = photoUriString;
 		this.category = category;
 	}
 
@@ -26,13 +28,17 @@ public class Item {
 		return name;
 	}
 
-	public void setPhoto(int photo) {
-		this.photo = photo;
+//	public void setPhoto(int photo) {
+//		this.photo = photo;
+//	}
+
+	public String getPhotoUriString(){
+		return photoUriString;
 	}
 
-	public int getPhoto() {
-		return photo;
-	}
+//	public int getPhoto() {
+//		return photo;
+//	}
 
 	public String getCategory() {
 		return category;

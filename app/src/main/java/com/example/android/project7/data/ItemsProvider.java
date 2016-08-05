@@ -108,6 +108,22 @@ public class ItemsProvider extends ContentProvider {
                 retCursor.setNotificationUri(getContext().getContentResolver(), uri);
                 return retCursor;
             }
+            case CARD_WITH_ID: {
+                long id = ContentUris.parseId(uri);
+
+                selection = ItemsContract.CardsEntry._ID + " = ?";
+                selectionArgs = new String[]{String.valueOf(id)};
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        ItemsContract.CardsEntry.TABLE_NAME,
+                        projection,
+                        selection,selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                retCursor.setNotificationUri(getContext().getContentResolver(),uri);
+                return retCursor;
+            }
 
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
@@ -228,6 +244,11 @@ public class ItemsProvider extends ContentProvider {
                 break;
             case CARDS:
                 rowsUpdated = db.update(ItemsContract.CardsEntry.TABLE_NAME, values,selection, selectionArgs);
+                break;
+            case CARD_WITH_ID:
+                selection = ItemsContract.CardsEntry._ID + " = ?";
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                rowsUpdated = db.update(ItemsContract.CardsEntry.TABLE_NAME, values, selection, selectionArgs);
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);

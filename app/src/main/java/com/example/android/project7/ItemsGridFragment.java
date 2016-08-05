@@ -1,7 +1,10 @@
 package com.example.android.project7;
 
 import android.app.AlertDialog;
+import android.content.ContentUris;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.provider.MediaStore;
 import android.support.v4.app.LoaderManager;
 import android.content.ContentValues;
 import android.support.v4.content.CursorLoader;
@@ -9,7 +12,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
@@ -22,14 +24,12 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import com.example.android.project7.data.ItemsContract;
-import com.facebook.drawee.backends.pipeline.Fresco;
 
 public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 	private final String LOG_TAG = this.getClass().getSimpleName();
@@ -40,13 +40,19 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 	private Cursor mCursor;
 	private long mItemId;
 	private String mCategory;
-
+	private static boolean mEditMode = false;
 
 	private ItemsGridAdapter mItemsGridAdapter;
+
+	private String mGetPhotoUriString;
+	private String mTakePhotoUriString;
 
 	//private static final int CURSOR_LOADER_ID = 0;
 
 	private static final String SELECTED_KEY = "selected_position";
+	private static final int RESULT_LOAD_IMAGE = 0;
+	private static final int REQUEST_IMAGE_CAPTURE = 1;
+
 
 	private static final int ITEMS_LOADER = 0;
 
@@ -72,6 +78,27 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 		ItemsGridFragment fragment = new ItemsGridFragment();
 		fragment.setArguments(args);
 		return fragment;
+	}
+
+	public static void toggleEditMode(){
+		mEditMode = !mEditMode;
+	}
+	public static boolean getEditMode(){
+		return mEditMode;
+	}
+
+	public void setGetPhotoUriString(String getPhotoUriString) {
+		mGetPhotoUriString = getPhotoUriString;
+	}
+	public String getGetPhotoUriString(){
+		return mGetPhotoUriString;
+	}
+
+	public void setTakePhotoUriString(String takePhotoUriString) {
+		mTakePhotoUriString = takePhotoUriString;
+	}
+	public String getTakePhotoUriString(){
+		return mTakePhotoUriString;
 	}
 
 	public interface Callback {
@@ -121,7 +148,7 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 		Cursor c = getActivity().getContentResolver().query(
 				ItemsContract.ItemsEntry.CONTENT_URI,
 				new String[]{ItemsContract.ItemsEntry.COLUMN_CATEGORY},
-				null,null,null,null);
+				null, null, null, null);
 		if(c != null) {
 			ArrayList<String> categories = new ArrayList<>();
 			c.moveToFirst();
@@ -142,15 +169,19 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 	}
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item){
+		//super.onOptionsItemSelected(item);
 		int id = item.getItemId();
 		switch(id){
+//			case R.id.home:
+//				MainActivity.openDrawerLayout();
+//				break;
 			case R.id.add_item:
 				final ContentValues cv = new ContentValues();
 
 				AlertDialog.Builder b = new AlertDialog.Builder(ItemsGridFragment.this.getActivity());
 				b.setTitle("Add Item");
 
-				LinearLayout layout = new LinearLayout(ItemsGridFragment.this.getContext());
+				final LinearLayout layout = new LinearLayout(ItemsGridFragment.this.getContext());
 				layout.setOrientation(LinearLayout.VERTICAL);
 
 				String[] names = getNames();
@@ -171,23 +202,62 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 				categoryBox.setAdapter(adapter2);
 				layout.addView(categoryBox);
 
-				final EditText photoUrlBox = new EditText(ItemsGridFragment.this.getContext());
-				photoUrlBox.setHint("Enter a photo URL");
-				layout.addView(photoUrlBox);
+				final LinearLayout buttonLayout = new LinearLayout(ItemsGridFragment.this.getContext());
+				buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
+
+					final ImageButton getPhotoButton = new ImageButton(this.getActivity());
+					getPhotoButton.setImageResource(R.drawable.ic_folder_open_24dp);
+					getPhotoButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+					getPhotoButton.setOnClickListener(new View.OnClickListener() {
+						@Override
+						public void onClick(View v) {
+							Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+							startActivityForResult(intent, RESULT_LOAD_IMAGE);
+							final String photoUriString = getGetPhotoUriString();
+						}
+					});
+
+					final ImageButton takePhotoButton = new ImageButton(this.getActivity());
+					takePhotoButton.setImageResource(R.drawable.ic_photo_camera_24dp);
+					takePhotoButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+					takePhotoButton.setOnClickListener(new View.OnClickListener() {
+						@Override
+						public void onClick(View v) {
+							Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+							startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+							final String photoUriString = getTakePhotoUriString();
+						}
+					});
+
+					final ImageButton enterUrlButton = new ImageButton(this.getActivity());
+					enterUrlButton.setImageResource(R.drawable.ic_attachment_24dp);
+					enterUrlButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+					final EditText photoUrlBox = new EditText(ItemsGridFragment.this.getContext());
+
+				enterUrlButton.setOnClickListener(new View.OnClickListener() {
+					int count = 0;
+
+					@Override
+						public void onClick(View v) {
+							if(count <=0) {
+//							EditText enterUrlBox = new EditText(ItemsGridFragment.this.getActivity());
+//							enterUrlBox
+								photoUrlBox.setHint("Enter a photo URL");
+								layout.addView(photoUrlBox);
+							}
+						count++;
+
+					}
+					});
+
+
+				buttonLayout.addView(getPhotoButton);
+				buttonLayout.addView(takePhotoButton);
+				buttonLayout.addView(enterUrlButton);
+
+				layout.addView(buttonLayout);
 
 				b.setView(layout);
-
-//				Spinner categoryBox = (Spinner)ItemsGridFragment.this.getActivity().findViewById(R.id.set_category_spinner);
-//				final ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(ItemsGridFragment.this.getContext(),
-//						android.R.layout.simple_spinner_item, categories);
-//				categoryBox.setAdapter(spinnerAdapter);
-//				categoryBox.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//					@Override
-//					public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//						final String category = parent.getItemAtPosition(position).toString();
-//						cv.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, category);
-//					}
-//				});
 
 				b.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 					@Override
@@ -197,14 +267,23 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 						String photoUrl = photoUrlBox.getText().toString();
 						cv.put(ItemsContract.ItemsEntry.COLUMN_NAME, name);
 						cv.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, category);
-						if(photoUrl.length() <= 0){
+						if(photoUrl.length() <= 0) {
 							Log.d(LOG_TAG, "photoUrl is " + photoUrl);
-							cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID, R.drawable.v_face);
-						}else{
-							cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, photoUrl);
+							if (getGetPhotoUriString() != null && !getGetPhotoUriString().equals("")){
+								photoUrl = getGetPhotoUriString();
+							}else if (getTakePhotoUriString() != null && !getTakePhotoUriString().equals("")){
+								photoUrl = getTakePhotoUriString();
+							}
+							//cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID, R.drawable.v_face);
 						}
+						Log.d("IGF", "photoUrl is " + photoUrl);
+						cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, photoUrl);
+
 						Uri itemUri = getActivity().getContentResolver().insert(ItemsContract.ItemsEntry.CONTENT_URI, cv);
+
 						mItemsGridAdapter.notifyDataSetChanged();
+
+						MainActivity.addTab(category);
 
 						Log.d(LOG_TAG, "inserted: itemUri = " + itemUri);
 					}
@@ -238,6 +317,20 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 //		super.onInflate(activity,attrs,savedInstanceState);
 //	}
 
+//    public void ptivityResult(int requestCode, int resultCode, Intent data) {
+//		super.onActivityResult(requestCode, resultCode, data);
+//		if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK && null != data) {
+//			Uri selectedImage = data.getData();
+//			String[] filePathColumn = { MediaStore.Images.Media.DATA };
+//			Cursor cursor = getActivity().getContentResolver().query(selectedImage,filePathColumn, null, null, null);
+//			cursor.moveToFirst();
+//			int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+//			String picturePath = cursor.getString(columnIndex);
+//			cursor.close();
+////			ImageView imageView = (ImageView) findViewById(R.id.imgView);
+////			imageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
+//		}
+//	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -275,9 +368,13 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
-
-		getLoaderManager().initLoader(ITEMS_LOADER, null, this);
 		super.onActivityCreated(savedInstanceState);
+		getLoaderManager().initLoader(ITEMS_LOADER, null, this);
+	}
+
+	@Override
+	public void onResume(){
+		super.onResume();
 	}
 
 	public void onSaveInstanceState(Bundle outState){
@@ -297,7 +394,7 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 
 		if(mCategory != null){
 			selection = ItemsContract.ItemsEntry.COLUMN_CATEGORY + " = ?";
-			selectionArgs = new String[]{mCategory};
+			selectionArgs = new String[]{mCategory.toLowerCase()};
 		}
 		else {
 			selection = null;
@@ -334,49 +431,88 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 		ContentValues cv = new ContentValues();
 		ArrayList<Item> starterItems = new ArrayList<Item>(){};
 
-		starterItems.add(new Item(getContext(),getString(R.string.animal_label_cat),R.drawable.cat_1, getString(R.string.category_animals)));
-		starterItems.add(new Item(getContext(),getString(R.string.animal_label_cow),R.drawable.cow_1, getString(R.string.category_animals)));
-		starterItems.add(new Item(getContext(), getString(R.string.animal_label_dog), R.drawable.dog_1, getString(R.string.category_animals)));
-		starterItems.add(new Item(getContext(), getString(R.string.animal_label_owl), R.drawable.owl_1, getString(R.string.category_animals)));
-		starterItems.add(new Item(getContext(), getString(R.string.animal_label_elephant), R.drawable.elephant_1, getString(R.string.category_animals)));
-		starterItems.add(new Item(getContext(), getString(R.string.animal_label_lion), R.drawable.lion_1, getString(R.string.category_animals)));
-		starterItems.add(new Item(getContext(), getString(R.string.animal_label_squirrel), R.drawable.squirrel_1, getString(R.string.category_animals)));
+		starterItems.add(new Item(getContext(),getString(R.string.animal_label_cat),getString(R.string.android_resource_uri_base) + R.drawable.cat_1, getString(R.string.category_animals)));
+				starterItems.add(new Item(getContext(), getString(R.string.animal_label_cow), getString(R.string.android_resource_uri_base) + R.drawable.cow_1, getString(R.string.category_animals)));
+		starterItems.add(new Item(getContext(), getString(R.string.animal_label_dog), getString(R.string.android_resource_uri_base) + R.drawable.dog_1, getString(R.string.category_animals)));
+		starterItems.add(new Item(getContext(), getString(R.string.animal_label_owl), getString(R.string.android_resource_uri_base) + R.drawable.owl_1, getString(R.string.category_animals)));
+		starterItems.add(new Item(getContext(), getString(R.string.animal_label_elephant), getString(R.string.android_resource_uri_base) + R.drawable.elephant_1, getString(R.string.category_animals)));
+		starterItems.add(new Item(getContext(), getString(R.string.animal_label_lion), getString(R.string.android_resource_uri_base) + R.drawable.lion_1, getString(R.string.category_animals)));
+		starterItems.add(new Item(getContext(), getString(R.string.animal_label_squirrel), getString(R.string.android_resource_uri_base) + R.drawable.squirrel_1, getString(R.string.category_animals)));
 
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_mom), R.drawable.mom_1, getString(R.string.category_people)));
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_dad), R.drawable.dad_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_mom), getString(R.string.android_resource_uri_base) + R.drawable.mom_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_dad), getString(R.string.android_resource_uri_base) + R.drawable.dad_1, getString(R.string.category_people)));
 
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_grandpa_bones), R.drawable.grandpa_bones_1, getString(R.string.category_people)));
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_grandma_amy), R.drawable.grandma_amy_1, getString(R.string.category_people)));
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_grandpa_porter), R.drawable.grandpa_porter_1, getString(R.string.category_people)));
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_grandma_carmen), R.drawable.grandma_carmen_1, getString(R.string.category_people)));
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_uncle_tone), R.drawable.uncle_tone_1, getString(R.string.category_people)));
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_uncle_vinnie), R.drawable.uncle_vinnie_1, getString(R.string.category_people)));
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_aunt_mel), R.drawable.aunt_mel_1, getString(R.string.category_people)));
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_cousin_rachel), R.drawable.cousin_rachel_1, getString(R.string.category_people)));
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_cousin_porter), R.drawable.cousin_porter_1, getString(R.string.category_people)));
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_cousin_sophia), R.drawable.cousin_sophia_1, getString(R.string.category_people)));
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_aunt_pam), R.drawable.aunt_pam_1, getString(R.string.category_people)));
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_aunt_debi), R.drawable.aunt_debi_1, getString(R.string.category_people)));
-		starterItems.add(new Item(getContext(), getString(R.string.person_name_aunt_punkin), R.drawable.aunt_punkin_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_grandpa_bones), getString(R.string.android_resource_uri_base) + R.drawable.grandpa_bones_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_grandma_amy), getString(R.string.android_resource_uri_base) + R.drawable.grandma_amy_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_grandpa_porter), getString(R.string.android_resource_uri_base) + R.drawable.grandpa_porter_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_grandma_carmen), getString(R.string.android_resource_uri_base) + R.drawable.grandma_carmen_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_uncle_tone), getString(R.string.android_resource_uri_base) + R.drawable.uncle_tone_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_uncle_vinnie), getString(R.string.android_resource_uri_base) + R.drawable.uncle_vinnie_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_aunt_mel), getString(R.string.android_resource_uri_base) + R.drawable.aunt_mel_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_cousin_rachel), getString(R.string.android_resource_uri_base) + R.drawable.cousin_rachel_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_cousin_porter), getString(R.string.android_resource_uri_base) + R.drawable.cousin_porter_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_cousin_sophia), getString(R.string.android_resource_uri_base) + R.drawable.cousin_sophia_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_aunt_pam), getString(R.string.android_resource_uri_base) + R.drawable.aunt_pam_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_aunt_debi), getString(R.string.android_resource_uri_base) + R.drawable.aunt_debi_1, getString(R.string.category_people)));
+		starterItems.add(new Item(getContext(), getString(R.string.person_name_aunt_punkin), getString(R.string.android_resource_uri_base) + R.drawable.aunt_punkin_1, getString(R.string.category_people)));
 
 
-		starterItems.add(new Item(getContext(), getString(R.string.food_name_apple), R.drawable.apple_1, getString(R.string.category_food)));
-		starterItems.add(new Item(getContext(), getString(R.string.food_name_banana), R.drawable.banana_1, getString(R.string.category_food)));
-		starterItems.add(new Item(getContext(), getString(R.string.food_name_brocolli), R.drawable.broccoli_1, getString(R.string.category_food)));
-		starterItems.add(new Item(getContext(), getString(R.string.food_name_grapes), R.drawable.grapes_1, getString(R.string.category_food)));
-		starterItems.add(new Item(getContext(), getString(R.string.food_name_oranges), R.drawable.oranges_1, getString(R.string.category_food)));
-		starterItems.add(new Item(getContext(), getString(R.string.food_name_peas), R.drawable.peas_1, getString(R.string.category_food)));
-		starterItems.add(new Item(getContext(), getString(R.string.food_name_strawberries), R.drawable.strawberries_1, getString(R.string.category_food)));
-		starterItems.add(new Item(getContext(), getString(R.string.food_name_tomatoes), R.drawable.tomatoes_1, getString(R.string.category_food)));
+		starterItems.add(new Item(getContext(), getString(R.string.food_name_apple), getString(R.string.android_resource_uri_base) + R.drawable.apple_1, getString(R.string.category_food)));
+		starterItems.add(new Item(getContext(), getString(R.string.food_name_banana), getString(R.string.android_resource_uri_base) + R.drawable.banana_1, getString(R.string.category_food)));
+		starterItems.add(new Item(getContext(), getString(R.string.food_name_brocolli), getString(R.string.android_resource_uri_base) + R.drawable.broccoli_1, getString(R.string.category_food)));
+		starterItems.add(new Item(getContext(), getString(R.string.food_name_grapes), getString(R.string.android_resource_uri_base) + R.drawable.grapes_1, getString(R.string.category_food)));
+		starterItems.add(new Item(getContext(), getString(R.string.food_name_oranges), getString(R.string.android_resource_uri_base) + R.drawable.oranges_1, getString(R.string.category_food)));
+		starterItems.add(new Item(getContext(), getString(R.string.food_name_peas), getString(R.string.android_resource_uri_base) + R.drawable.peas_1, getString(R.string.category_food)));
+		starterItems.add(new Item(getContext(), getString(R.string.food_name_strawberries), getString(R.string.android_resource_uri_base) + R.drawable.strawberries_1, getString(R.string.category_food)));
+		starterItems.add(new Item(getContext(), getString(R.string.food_name_tomatoes), getString(R.string.android_resource_uri_base) + R.drawable.tomatoes_1, getString(R.string.category_food)));
 
 		for (Item item : starterItems){
-			cv.put(ItemsContract.ItemsEntry.COLUMN_NAME, item.getName());
-			cv.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, item.getCategory());
-			cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID, item.getPhoto());
+			cv.put(ItemsContract.ItemsEntry.COLUMN_NAME, item.getName().toLowerCase());
+			cv.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, item.getCategory().toLowerCase());
+//			cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID, item.getPhoto());
+			cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, item.getPhotoUriString());
 			Uri itemUri = getActivity().getContentResolver().insert(ItemsContract.ItemsEntry.CONTENT_URI, cv);
 			mItemsGridAdapter.notifyDataSetChanged();
 
 			Log.d(LOG_TAG, "Added item with name " + item.getName() + " uri = " + itemUri.toString());
+		}
+	}
+
+//	private void sendPicToDb(Uri picUri){
+//		ContentValues cv = new ContentValues();
+//		cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, picUri.toString());
+//		int updated = getActivity().getContentResolver().update(itemUri,cv,null,null);
+//
+//		Log.d("TAG", "updated = " + updated);
+//	}
+
+	@Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == RESULT_LOAD_IMAGE && resultCode == this.getActivity().RESULT_OK && null != data) {
+			Uri selectedImage = data.getData();
+			String[] filePathCol = {MediaStore.Images.Media.DATA};
+			Cursor cursor = getActivity().getContentResolver().query(selectedImage, filePathCol, null, null, null);
+			cursor.moveToFirst();
+			String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
+			setGetPhotoUriString(picPath);
+			//setGetPhotoUriString(selectedImage.toString());
+			Log.d("IGF", "getGetPhotoUriString = " + selectedImage.toString());
+//			String[] filePathColumn = {MediaStore.Images.Media.DATA};
+//			Cursor cursor = getActivity().getContentResolver().query(selectedImage, filePathColumn, null, null, null);
+//			cursor.moveToFirst();
+//			int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+//			String picturePath = cursor.getString(columnIndex);
+//			cursor.close();
+//			setGetPhotoUriString(picturePath);//            ImageView imageView = (ImageView) findViewById(R.id.imgView);
+//            imageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
+		}
+		if (requestCode == REQUEST_IMAGE_CAPTURE){
+			if (resultCode == this.getActivity().RESULT_OK){
+				Bundle extras = data.getExtras();
+				Uri takenPictureUri = data.getData();
+				setTakePhotoUriString(takenPictureUri.toString());
+				//sendPicToDb(takenPictureUri);
+			}
 		}
 	}
 }

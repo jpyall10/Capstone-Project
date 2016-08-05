@@ -26,7 +26,7 @@
                 app:layout_scrollFlags="scroll|exitUntilCollapsed"
                 app:contentScrim="?attr/colorPrimary"
                 app:collapsedTitleTextAppearance="@style/TextAppearance.AppCompat.Title"
-                app:expandedTitleTextAppearance="@style/TextAppearance.Design.CollapsingToolbar.Expanded"
+                app:expandedTitleTextAppearance="@style/ItemTitle"
                 app:expandedTitleMarginStart="48dp"
                 app:expandedTitleMarginEnd="64dp">
                 <!--android:fitsSystemWindows="true"-->

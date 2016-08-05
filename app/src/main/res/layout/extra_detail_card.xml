@@ -43,11 +43,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="left"
-            android:paddingStart="14sp"
-            android:paddingLeft="14sp"
-            android:textSize="14sp"
-            style="@style/Widget.CardContent"/>
-            <!--android:textAppearance="?attr/textAppearanceListItem"/>-->
+            android:paddingTop="0dp"
+            android:paddingStart="14dp"
+            android:paddingLeft="14dp"
+            style="@style/Widget.CardContent"
+            android:textAppearance="?attr/textAppearanceListItem"/>
         android:textColor="@android:color/white"
 
     </LinearLayout>

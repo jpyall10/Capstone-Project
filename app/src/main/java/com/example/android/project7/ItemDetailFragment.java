@@ -1,12 +1,15 @@
 package com.example.android.project7;
 
 import android.app.AlertDialog;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -25,10 +28,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.example.android.project7.data.ItemsContract;
 
 /**
@@ -41,17 +46,22 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
     private FloatingActionButton fab;
     private TextToSpeech myTTS;
 
+    private String mGetPhotoUriString;
+    private String mTakePhotoUriString;
+
+    private ImageView mPreviewImage;
+
 //    private Uri itemUri;
 
     private RecyclerView mRecyclerView;
 
     private ItemDetailAdapter mItemDetailAdapter;
 
-    private Boolean mEditMode = false;
-
     private int MY_DATA_CHECK_CODE = 0;
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
+    private static final int RESULT_LOAD_IMAGE = 0;
+
 
     private static final int ITEM_CARDS_LOADER = 1;
 
@@ -94,8 +104,9 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
         return fragment;
     }
     public interface Callback {
-        public void onItemSelected(Uri idUri, ItemDetailAdapter.ItemDetailAdapterViewHolder vh);
+        public void onItemSelected(Long id, ItemDetailAdapter.ItemDetailAdapterViewHolder vh);
         public void onItemLongSelected(Long id);
+        public void onBackdropChanged(String uriString);
     }
 
     @Override
@@ -112,21 +123,26 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
         }
     }
     @Override
-    public void onCreateOptionsMenu(Menu menu,MenuInflater inflater){
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        //super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu_detail_fragment, menu);
     }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
+        //super.onOptionsItemSelected(item);
         int id = item.getItemId();
+        Log.d(LOG_TAG, "item selected is " + item.toString() + " " + item.getItemId());
+
+
         switch(id){
             case R.id.add_card:
+                Log.d(LOG_TAG, "add card was pressed ");
                 final ContentValues cv = new ContentValues();
 
                 AlertDialog.Builder b = new AlertDialog.Builder(ItemDetailFragment.this.getActivity());
                 b.setTitle("Add");
 
-                LinearLayout layout = new LinearLayout(ItemDetailFragment.this.getContext());
+                final LinearLayout layout = new LinearLayout(ItemDetailFragment.this.getContext());
                 layout.setOrientation(LinearLayout.VERTICAL);
 
 
@@ -170,12 +186,22 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
                 b.setNegativeButton("CANCEL", null);
                 b.create().show();
                 break;
-            case android.R.id.home:
-                getActivity().onBackPressed();
-                return true;
             default:
         }
         return true;
+    }
+    public void setGetPhotoUriString(String getPhotoUriString) {
+        mGetPhotoUriString = getPhotoUriString;
+    }
+    public String getGetPhotoUriString(){
+        return mGetPhotoUriString;
+    }
+
+    public void setTakePhotoUriString(String takePhotoUriString) {
+        mTakePhotoUriString = takePhotoUriString;
+    }
+    public String getTakePhotoUriString(){
+        return mTakePhotoUriString;
     }
 
     @Override
@@ -191,7 +217,7 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
             @Override
             public void onClick(Long id, ItemDetailAdapter.ItemDetailAdapterViewHolder vh) {
                 //id = mCursor.getLong(COL_ITEM_ID);
-//                ((Callback)getActivity()).onItemSelected(ItemsContract.CardsEntry.buildCardsByItemUri(id),vh);
+                ((Callback)getActivity()).onItemSelected(id,vh);
             }
 
             @Override
@@ -200,9 +226,7 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
             }
         });
 
-//		mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setAdapter(mItemDetailAdapter);
-        //setupRecyclerView(mRecyclerView);
         return rootView;
     }
 
@@ -238,9 +262,6 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (data == null){
-            createBlankCard();
-        }
         mItemDetailAdapter.swapCursor(data);
     }
 
@@ -250,17 +271,26 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
 
     }
 
-    private void createBlankCard(){
-        ContentValues cv = new ContentValues();
-        cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_LABEL, "");
-        cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_DESCRIPTION, "");
-        cv.put(ItemsContract.CardsEntry.COLUMN_ITEM_KEY, mItemId);
-        //cv.put(ItemsContract.CardsEntry.COLUMN_PHOTO_RES_ID, item.getPhoto());
-        Uri cardsUri = ItemsContract.CardsEntry.buildCardsByItemUri(ItemsContract.ItemsEntry.buildItemUri(mItemId));
-        Uri cardUri = getActivity().getContentResolver().insert(cardsUri, cv);
-        mItemDetailAdapter.notifyDataSetChanged();
-
-        Log.d(LOG_TAG, "Added item with name " + " uri = " + cardUri.toString());
-
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RESULT_LOAD_IMAGE && resultCode == this.getActivity().RESULT_OK && null != data) {
+            Uri selectedImage = data.getData();
+            String[] filePathCol = {MediaStore.Images.Media.DATA};
+            Cursor cursor = getActivity().getContentResolver().query(selectedImage, filePathCol, null, null, null);
+            cursor.moveToFirst();
+            String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
+            setGetPhotoUriString(picPath);
+            //loadPreviewImage(selectedImage);
+            Log.d("IGF", "getGetPhotoUriString = " + picPath);
+        }
+        if (requestCode == REQUEST_IMAGE_CAPTURE){
+            if (resultCode == this.getActivity().RESULT_OK){
+                Bundle extras = data.getExtras();
+                Uri takenPictureUri = data.getData();
+                setTakePhotoUriString(takenPictureUri.toString());
+                //loadPreviewImage(takenPictureUri.toString());
+            }
+        }
     }
 }
