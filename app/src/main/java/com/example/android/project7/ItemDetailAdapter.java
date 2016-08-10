@@ -2,6 +2,8 @@ package com.example.android.project7;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -15,6 +17,9 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.example.android.project7.data.ItemsContract;
+import com.google.android.gms.common.api.GoogleApiClient;
+
+import java.util.List;
 
 /**
  * Created by Jon on 7/10/2016.
@@ -38,7 +43,6 @@ public class ItemDetailAdapter extends RecyclerView.Adapter<ItemDetailAdapter.It
             mImageView = (ImageView) v.findViewById(R.id.extra_image);
             mTitleView = (TextView) v.findViewById(R.id.extra_title);
             mDescriptionView = (TextView) v.findViewById(R.id.extra_description);
-            //mCheckbox = (ImageView) v.findViewById(R.id.checkbox);
             v.setOnClickListener(this);
             v.setOnLongClickListener(this);
         }
@@ -82,8 +86,6 @@ public class ItemDetailAdapter extends RecyclerView.Adapter<ItemDetailAdapter.It
     public ItemDetailAdapter.ItemDetailAdapterViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.extra_detail_card, parent, false);
-        //view.setBackgroundResource(mBackground);
-        //return new RecyclerView.ViewHolder(view);
         return new ItemDetailAdapterViewHolder(view);    }
 
     @Override
@@ -92,7 +94,7 @@ public class ItemDetailAdapter extends RecyclerView.Adapter<ItemDetailAdapter.It
             Log.d("TAG", "item count is " + getItemCount());
             mCursor.moveToPosition(position);
             final String extraPhoto;
-            final String extraTitle, extraDescription;
+            final String extraTitle, extraDescription, extraLocation;
 
             extraTitle = mCursor.getString(mCursor.getColumnIndex(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_LABEL));
             extraPhoto = mCursor.getString(mCursor.getColumnIndex(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_PHOTO));
@@ -102,20 +104,11 @@ public class ItemDetailAdapter extends RecyclerView.Adapter<ItemDetailAdapter.It
             holder.mDescriptionView.setText(extraDescription);
 
 
+
+
             Log.d("IGA", "OnBindViewHolder ran " + " and photo, name " + extraPhoto + ", " + extraTitle);
 
             Log.d("IGA", "OnBindViewHolder ran " + " position = " + position);
-
-
-            //            public void onClick(View v) {
-            //                Context context = v.getContext();
-            //                Intent intent = new Intent(context, ItemDetailActivity.class);
-            //                intent.putExtra(ItemDetailActivity.EXTRA_NAME, name);
-            //                intent.putExtra(ItemDetailActivity.EXTRA_PHOTO, photo);
-            //                //intent.putExtra(ItemDetailActivity.EXTRA_DESCRIPTION, description);
-            //
-            //                context.startActivity(intent);
-            //            }
 
             if (extraPhoto != null && !extraPhoto.equals("")) {
                 holder.mImageView.setVisibility(View.VISIBLE);
@@ -146,14 +139,6 @@ public class ItemDetailAdapter extends RecyclerView.Adapter<ItemDetailAdapter.It
     public Cursor getCursor(){
         return mCursor;
     }
-
-//    public void selectView(RecyclerView.ViewHolder viewHolder){
-//        if (viewHolder instanceof ItemDetailAdapterViewHolder){
-//            ItemDetailAdapterViewHolder ivh = (ItemDetailAdapterViewHolder) viewHolder;
-//            ivh.onClick(ivh.mView);
-//        }
-//    }
-
 
 }
 

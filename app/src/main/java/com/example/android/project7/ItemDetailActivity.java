@@ -25,6 +25,8 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -63,7 +65,7 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 	private  String mName;
 	private  String mPhotoUriString;
 
-	private FloatingActionButton fab;
+	public static FloatingActionButton fab;
 	private TextToSpeech myTTS;
 
 	private Uri itemUri;
@@ -71,7 +73,7 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 	private Cursor mCursor;
 
 	private CollapsingToolbarLayout mCollapsingToolbar;
-	private Boolean mEditMode = false;
+	public static Boolean mEditMode = false;
 
 	private int MY_DATA_CHECK_CODE = 0;
 
@@ -152,14 +154,11 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 
 		fab = (FloatingActionButton)findViewById(R.id.fab);
 		//fab.setImageURI(Uri.parse("android.resource://com.example.android.project7/R.drawable.ic_add_24dp"));
-		fab.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				readText(mName);
-//				mp.start();
-			}
-		});
-
+		if (getEditMode()){
+			fab.setVisibility(View.VISIBLE);
+		}else{
+			fab.setVisibility(View.GONE);
+		}
 		ActivityCompat.requestPermissions(ItemDetailActivity.this,
 				new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
 				1);
@@ -177,7 +176,7 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu){
-		//super.onCreateOptionsMenu(menu);
+		super.onCreateOptionsMenu(menu);
 		getMenuInflater().inflate(R.menu.menu_detail_activity, menu);
 		return true;
 	}
@@ -189,224 +188,170 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 			case android.R.id.home:
 				this.onBackPressed();
 				break;
-//			case R.id.add_card:
-//				final ContentValues cv = new ContentValues();
-//
-//				AlertDialog.Builder b = new AlertDialog.Builder(this);
-//				b.setTitle("Add");
-//
-//				final LinearLayout layout = new LinearLayout(this);
-//				layout.setOrientation(LinearLayout.VERTICAL);
-//
-//
-//				final EditText titleBox = new EditText(this);
-//				titleBox.setHint("Title");
-//				layout.addView(titleBox);
-//
-//
-//				final EditText descriptionBox = new EditText(this);
-//				descriptionBox.setHint("Description");
-//				layout.addView(descriptionBox);
-//
-//				final EditText photoUrlBox = new EditText(this);
-//				photoUrlBox.setHint("Enter a photo URL");
-//				layout.addView(photoUrlBox);
-//
-//				b.setView(layout);
-//
-//				b.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-//					@Override
-//					public void onClick(DialogInterface dialog, int whichButton) {
-//						String title = titleBox.getText().toString();
-//						String description = descriptionBox.getText().toString();
-//						String photoUrl = photoUrlBox.getText().toString();
-//						cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_LABEL, title);
-//						cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_DESCRIPTION, description);
-//						cv.put(ItemsContract.CardsEntry.COLUMN_ITEM_KEY, );
-//						if(photoUrl.length() <= 0){
-//							cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_PHOTO, "");
-//						}else{
-//							cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_PHOTO, photoUrl);
-//						}
-//						Uri itemUri = ItemsContract.ItemsEntry.buildItemUri(mItemId);
-//						Uri cardUri = getActivity().getContentResolver().insert(ItemsContract.CardsEntry.buildCardsByItemUri(itemUri), cv);
-//						mItemDetailAdapter.notifyDataSetChanged();
-//
-//						Log.d(LOG_TAG, "inserted: cardUri = " + cardUri);
-//					}
-//				});
-//				b.setNegativeButton("CANCEL", null);
-//				b.create().show();
-//				break;
 			case R.id.edit_item:
-				boolean editMode = getEditMode();
-				if(editMode) {
-					final ContentValues cvEdit = new ContentValues();
-//					final Cursor c = getContentResolver().query(
-//							itemUri,
-//							new String[]{ItemsContract.ItemsEntry.COLUMN_NAME, ItemsContract.ItemsEntry.COLUMN_CATEGORY, ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1}, null, null, null);
-					AlertDialog.Builder bEdit = new AlertDialog.Builder(this);
-					bEdit.setTitle("Edit Item");
-
-					mLayout = new LinearLayout(this);
-					mLayout.setOrientation(LinearLayout.VERTICAL);
-
-//					c.moveToFirst();
-					mCursor.moveToFirst();
-//					String currentName = c.getString(c.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_NAME));
-					String currentName = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_NAME));
-					final EditText editNameBox = new EditText(this);
-					editNameBox.setText(currentName);
-					mLayout.addView(editNameBox);
-
-//					String currentCategory = c.getString(c.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_CATEGORY));
-					String currentCategory = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_CATEGORY));
-					final EditText editCategoryBox = new EditText(this);
-					editCategoryBox.setText(currentCategory);
-					mLayout.addView(editCategoryBox);
-
-					String currentPicUriString = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1));
-
-					mPreviewImage = new ImageView(this);
-					int pixels = (int)dipToPixels(this,200);
-					LinearLayout.LayoutParams params =
-							new LinearLayout.LayoutParams(pixels, ViewGroup.LayoutParams.WRAP_CONTENT);
-//					params.weight = 1.0f;
-					params.gravity = Gravity.CENTER;
-//					mPreviewImage.setLayoutParams(new ViewGroup.LayoutParams(pixels, ViewGroup.LayoutParams.WRAP_CONTENT));
-					mPreviewImage.setLayoutParams(params);
-
-					mPhotoUrlBox = new EditText(this);
-					if(currentPicUriString != null && !currentPicUriString.equals("")) {
-						mPhotoUrlBox.setText(currentPicUriString);
-						loadPreviewImage(currentPicUriString);
-					}else{
-						mPhotoUrlBox.setHint("Enter photo URL");
-					}
-
-					final LinearLayout editPictureButtons = new LinearLayout(this);
-					editPictureButtons.setOrientation(LinearLayout.HORIZONTAL);
-					//
-					final ImageButton getPhotoButton = new ImageButton(this);
-					getPhotoButton.setImageResource(R.drawable.ic_folder_open_24dp);
-					getPhotoButton.setLayoutParams(new LinearLayout.LayoutParams(
-							ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-					getPhotoButton.setOnClickListener(new View.OnClickListener() {
-						@Override
-						public void onClick(View v) {
-							mLayout.removeView(mPreviewImage);
-							mLayout.removeView(mPhotoUrlBox);
-							Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-							startActivityForResult(intent, RESULT_LOAD_IMAGE);
-
-							//run when return from intent
-//							mCursor.moveToFirst();
-//							String photoUriString = c.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1));
-//							mPhotoUrlBox.setText(photoUriString);
-							//loadPreviewImage(photoUriString);
-//							mLayout.addView(mPreviewImage);
-						}
-					});
-					//
-					final ImageButton takeNewPhotoButton = new ImageButton(this);
-					takeNewPhotoButton.setImageResource(R.drawable.ic_photo_camera_24dp);
-
-					takeNewPhotoButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-					takeNewPhotoButton.setOnClickListener(new View.OnClickListener() {
-						@Override
-						public void onClick(View v) {
-							mLayout.removeView(mPreviewImage);
-							mLayout.removeView(mPhotoUrlBox);
-							Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-							startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
-
-						}
-					});
-					//
-
-
-					//mCursor.close();;
-
-					editPictureButtons.addView(getPhotoButton);
-					editPictureButtons.addView(takeNewPhotoButton);
-
-					mLayout.addView(editPictureButtons);
-					mLayout.addView(mPhotoUrlBox);
-					mLayout.addView(mPreviewImage);
-
-
-					bEdit.setView(mLayout);
-
-					bEdit.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int whichButton) {
-							String name = editNameBox.getText().toString();
-							String category = editCategoryBox.getText().toString();
-							String photoUrl = mPhotoUrlBox.getText().toString();
-							//sendPicToDb(photoUrl);
-							cvEdit.put(ItemsContract.ItemsEntry.COLUMN_NAME, name);
-							cvEdit.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, category);
-
-							if (photoUrl.length() <= 0){
-								photoUrl = getString(R.string.android_resource_uri_base) + R.drawable.v_face;
-							}
-							cvEdit.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, photoUrl);
-
-//							if(photoUrl.length() <= 0) {
-//								Log.d(LOG_TAG, "photoUrl is " + photoUrl);
-//								if (getGetPhotoUriString() != null && !getGetPhotoUriString().equals("")){
-//									photoUrl = getGetPhotoUriString();
-//									Log.d(LOG_TAG, "inside if photoUrl is " + photoUrl);
-//								}else if (getTakePhotoUriString() != null && !getTakePhotoUriString().equals("")){
-//									photoUrl = getTakePhotoUriString();
-//									Log.d(LOG_TAG, "inside else photoUrl is " + photoUrl);
-//
-//								}
-//								//cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID, R.drawable.v_face);
-//							}
-							Log.d("IGF", "photoUrl is " + photoUrl);
-
-							int rowsUpdated = getContentResolver().
-									update(itemUri, cvEdit, null, null);
-
-//							if(rowsUpdated > 0){
-//								ItemDetailActivity.updateItemInfo(name, photoUrl);
-//							}
-
-							mCursor = getContentResolver().query(itemUri,null,null,null,null);
-							loadBackdrop(photoUrl);
-							mCollapsingToolbar.setTitle(name);
-							MainActivity.addTab(category);
-
-							Log.d("IDA", "updatedRows = " + rowsUpdated);
-						}
-					});
-					bEdit.setNegativeButton("CANCEL", new DialogInterface.OnClickListener(){
-
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-
-						}
-					});
-					bEdit.create().show();
-				}
-				break;
-			case R.id.edit_mode:
-				if(getEditMode()){
-					toggleEditMode();
-					menuItem.setTitle(R.string.edit_mode_off);
+				//boolean editMode = getEditMode();
+				if(getEditMode()) {
+					editItem();
 				}else{
-					toggleEditMode();
-					menuItem.setTitle(R.string.edit_mode_on);
+					Toast toast = Toast.makeText(this, "You must be in Edit Mode to edit item", Toast.LENGTH_LONG);
+					toast.show();
 				}
 				break;
+//					menuItem.setTitle(R.string.edit_mode_off);
 			default:
 		}
 		return false;
 	}
 
+	public void editItem(){
+		//create ContentValues to add to Provider
+		final ContentValues cvEdit = new ContentValues();
+//					final Cursor c = getContentResolver().query(
+//							itemUri,
+//							new String[]{ItemsContract.ItemsEntry.COLUMN_NAME, ItemsContract.ItemsEntry.COLUMN_CATEGORY, ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1}, null, null, null);
+		//Start Dialog Builder
+		AlertDialog.Builder bEdit = new AlertDialog.Builder(this);
+		bEdit.setTitle("Edit Item");
 
+		//Initialize main dialog layout
+		mLayout = new LinearLayout(this);
+		mLayout.setOrientation(LinearLayout.VERTICAL);
 
+		//get current item name and set edit box
+		mCursor.moveToFirst();
+		String currentName = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_NAME));
+		final EditText editNameBox = new EditText(this);
+		editNameBox.setText(currentName);
+		mLayout.addView(editNameBox);
+
+		//get current item category and set edit box
+		String currentCategory = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_CATEGORY));
+		final EditText editCategoryBox = new EditText(this);
+		editCategoryBox.setText(currentCategory);
+		mLayout.addView(editCategoryBox);
+
+		//get current pic uristring
+		String currentPicUriString = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1));
+
+		//initialize PreviewImageView and set layout params
+		mPreviewImage = new ImageView(this);
+		int pixels = (int)dipToPixels(this,200);
+		LinearLayout.LayoutParams params =
+				new LinearLayout.LayoutParams(pixels, ViewGroup.LayoutParams.WRAP_CONTENT);
+		params.gravity = Gravity.CENTER;
+		mPreviewImage.setLayoutParams(params);
+
+		//Initialize photoUrlBox and setText or hint
+		mPhotoUrlBox = new EditText(this);
+
+		if(currentPicUriString != null && !currentPicUriString.equals("")) {
+			mPhotoUrlBox.setText(currentPicUriString);
+			loadPreviewImage(currentPicUriString);
+		}else{
+			mPhotoUrlBox.setHint("Enter photo URL");
+		}
+
+		mPhotoUrlBox.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+			}
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+			}
+
+			@Override
+			public void afterTextChanged(Editable s) {
+				String url = s.toString();
+				loadPreviewImage(url);
+			}
+		});
+
+		//Created buttons Layout
+		final LinearLayout editPictureButtons = new LinearLayout(this);
+		editPictureButtons.setOrientation(LinearLayout.HORIZONTAL);
+
+		//create button to get image from files and set onclick
+		final ImageButton getPhotoButton = new ImageButton(this);
+		getPhotoButton.setImageResource(R.drawable.ic_folder_open_24dp);
+		getPhotoButton.setLayoutParams(new LinearLayout.LayoutParams(
+				ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+		getPhotoButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				mLayout.removeView(mPreviewImage);
+				mLayout.removeView(mPhotoUrlBox);
+				Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+				startActivityForResult(intent, RESULT_LOAD_IMAGE);
+			}
+		});
+
+		//create button to take a new picture with camera and set onclick
+		final ImageButton takeNewPhotoButton = new ImageButton(this);
+		takeNewPhotoButton.setImageResource(R.drawable.ic_photo_camera_24dp);
+		takeNewPhotoButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+		takeNewPhotoButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				mLayout.removeView(mPreviewImage);
+				mLayout.removeView(mPhotoUrlBox);
+				Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+				startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+
+			}
+		});
+
+		//add buttons to button layout
+		editPictureButtons.addView(getPhotoButton);
+		editPictureButtons.addView(takeNewPhotoButton);
+
+		//add buttons, urlbox and preview image to main layout
+		mLayout.addView(editPictureButtons);
+		mLayout.addView(mPhotoUrlBox);
+		mLayout.addView(mPreviewImage);
+
+		//set dialog layout
+		bEdit.setView(mLayout);
+
+		//set dialog add button
+		bEdit.setPositiveButton("SAVE", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int whichButton) {
+				String name = editNameBox.getText().toString();
+				String category = editCategoryBox.getText().toString();
+				String photoUrl = mPhotoUrlBox.getText().toString();
+				cvEdit.put(ItemsContract.ItemsEntry.COLUMN_NAME, name);
+				cvEdit.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, category);
+
+				if (photoUrl.length() <= 0){
+					photoUrl = getString(R.string.android_resource_uri_base) + R.drawable.v_face;
+				}
+				cvEdit.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, photoUrl);
+				Log.d("IGF", "photoUrl is " + photoUrl);
+
+				int rowsUpdated = getContentResolver().
+						update(itemUri, cvEdit, null, null);
+
+				mCursor = getContentResolver().query(itemUri,null,null,null,null);
+				loadBackdrop(photoUrl);
+				mCollapsingToolbar.setTitle(name);
+				MainActivity.addTab(category);
+				toggleEditMode();
+
+				Log.d("IDA", "updatedRows = " + rowsUpdated);
+			}
+		});
+
+		//set dialog cancel button
+		bEdit.setNegativeButton("CANCEL", new DialogInterface.OnClickListener(){
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+
+			}
+		});
+		bEdit.create().show();
+	}
 
 
 
@@ -425,10 +370,15 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 		mViewPager.setAdapter(mAdapter);
 	}
 
-	@Override
-	public void onResume() {
-		super.onResume();  // Always call the superclass method first
-	}
+//	@Override
+//	public void onResume() {
+//		super.onResume();  // Always call the superclass method first
+//		if(getEditMode()){
+//			mEditMode = true;
+//		}else{
+//			mEditMode = false;
+//		}
+//	}
 
 	@Override
 	public void onRequestPermissionsResult(int requestCode,
@@ -491,11 +441,12 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 				.into(mPreviewImage);
 	}
 
-	public void toggleEditMode(){
+	public static void toggleEditMode(){
 		mEditMode = !mEditMode;
+
 	}
 
-	public boolean getEditMode(){return mEditMode;}
+	public static boolean getEditMode(){return mEditMode;}
 
 	@Override
 	public void onInit(int status) {
@@ -584,7 +535,7 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 	public void onTakePhotoClick(View view) {
 
 		if (mEditMode == true){
-			takePicture();
+			//takePicture();
 		}else{
 			readText(mName);
 
@@ -610,51 +561,50 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 
 	@Override
 	public void onItemSelected(Long id, ItemDetailAdapter.ItemDetailAdapterViewHolder vh) {
+		final Uri myContentUri = ContentUris.withAppendedId(ItemsContract.CardsEntry.buildCardsByItemUri(itemUri), id);
 		Log.d("IDA", "item uri = " + itemUri.toString());
 
-		final Uri myContentUri = ContentUris.withAppendedId(ItemsContract.CardsEntry.buildCardsByItemUri(itemUri), id);
 		Cursor c = getContentResolver().query(myContentUri,
 				new String[]{ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_LABEL, ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_DESCRIPTION},
 				null, null, null);
 		c.moveToFirst();
 		final String title = c.getString(c.getColumnIndex(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_LABEL));
 		Log.d("IDA", "title = " + title);
-		if (title != null && title != ""){
+		if (title != null && title != "") {
 
-			final String description = c.getString(1);
-			readText(title + description);
+			final String description = c.getString(c.getColumnIndex(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_DESCRIPTION));
+			readText(title + "     " + description);
 		}
 		c.close();
-
 	}
 
 	@Override
 	public void onItemLongSelected(Long id) {
-		//edit details of card when in edit mode
-		//else do nothing
-		AlertDialog.Builder b = new AlertDialog.Builder(ItemDetailActivity.this);
-//        b.setTitle("Please enter a category");
-		b.setMessage("Do you want to delete this card?");
-		final Uri myContentUri = ContentUris.withAppendedId(ItemsContract.CardsEntry.buildCardsByItemUri(itemUri), id);
-		Log.d("TAG", "myContentUri = " + myContentUri.toString());
-		b.setPositiveButton(R.string.delete_item, new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int whichButton) {
-				// SHOULD NOW WORK
-				int rowsDeleted = getContentResolver().delete(myContentUri, null,null);
+		if(getEditMode()) {
+			AlertDialog.Builder b = new AlertDialog.Builder(ItemDetailActivity.this);
+			//        b.setTitle("Please enter a category");
+			b.setMessage("Do you want to delete this card?");
+			final Uri myContentUri = ContentUris.withAppendedId(ItemsContract.CardsEntry.buildCardsByItemUri(itemUri), id);
+			Log.d("TAG", "myContentUri = " + myContentUri.toString());
+			b.setPositiveButton(R.string.delete_item, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int whichButton) {
+					// SHOULD NOW WORK
+					int rowsDeleted = getContentResolver().delete(myContentUri, null, null);
 
-				Log.d("TAG", "rows deleted = " + rowsDeleted);
+					Log.d("TAG", "rows deleted = " + rowsDeleted);
 
-			}
-		});
-		b.setNegativeButton("CANCEL", null);
-		b.create().show();
+				}
+			});
+			b.setNegativeButton("CANCEL", null);
+			b.create().show();
+		}
 	}
-
-	@Override
-	public void onBackdropChanged(String uriString) {
-		loadBackdrop(uriString);
-	}
-
+//
+//	@Override
+//	public void onBackdropChanged(String uriString) {
+//		loadBackdrop(uriString);
+//	}
+//
 
 }

@@ -8,10 +8,35 @@
     android:orientation="vertical"
     android:gravity="bottom">
 
-    <TextView
+    <com.google.android.gms.common.SignInButton
+        android:id="@+id/sign_in_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textAppearance="@style/TextAppearance.AppCompat.Headline"/>
+        android:gravity="start"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:text="@string/username"
+            android:textAppearance="@style/TextAppearance.AppCompat.Headline"/>
+
+        <Button
+            android:id="@+id/sign_out_button"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:background="@drawable/rounded_corners"
+            android:textAppearance="@style/TextAppearance.AppCompat.Widget.Button"
+            android:textAllCaps="false"
+            android:text="Sign Out" />
+    </LinearLayout>
+
+
 
 </LinearLayout>

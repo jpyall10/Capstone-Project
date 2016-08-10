@@ -1,7 +1,7 @@
 package com.example.android.project7;
 
 import android.app.AlertDialog;
-import android.content.ContentUris;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.provider.MediaStore;
@@ -14,7 +14,12 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,11 +30,18 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
+import java.io.File;
 import java.util.ArrayList;
 
+import com.bumptech.glide.Glide;
 import com.example.android.project7.data.ItemsContract;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
 
 public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 	private final String LOG_TAG = this.getClass().getSimpleName();
@@ -42,14 +54,16 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 	private String mCategory;
 	private static boolean mEditMode = false;
 
-	private ItemsGridAdapter mItemsGridAdapter;
+	public ItemsGridAdapter mItemsGridAdapter;
+
+	private InterstitialAd mInterstitialAd;
 
 	private String mGetPhotoUriString;
 	private String mTakePhotoUriString;
+	private EditText mPhotoUrlBox;
+	private ImageView mPreviewImage;
+	private static LinearLayout mLayout;
 
-	//private static final int CURSOR_LOADER_ID = 0;
-
-	private static final String SELECTED_KEY = "selected_position";
 	private static final int RESULT_LOAD_IMAGE = 0;
 	private static final int REQUEST_IMAGE_CAPTURE = 1;
 
@@ -117,11 +131,36 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 		}else{
 			mCategory = null;
 		}
+
+		mInterstitialAd = new InterstitialAd(this.getContext());
+		mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
+
+		mInterstitialAd.setAdListener(new AdListener() {
+			@Override
+			public void onAdClosed() {
+				requestNewInterstitial();
+			}
+		});
+
+		requestNewInterstitial();
+	}
+
+	private void requestNewInterstitial() {
+		AdRequest adRequest = new AdRequest.Builder()
+				.addTestDevice("DEVICE_ID_EMULATOR") //("03157df319a82d3d")
+				.build();
+		mInterstitialAd.loadAd(adRequest);
 	}
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu,MenuInflater inflater){
+		super.onCreateOptionsMenu(menu, inflater);
 		inflater.inflate(R.menu.itemsgridfragment, menu);
+		if(getEditMode()){
+			menu.getItem(0).setIcon(R.drawable.ic_create_24dp_accent);
+		}else{
+			menu.getItem(0).setIcon(R.drawable.ic_create_24dp);
+		}
 	}
 
 	private String[] getNames(){
@@ -172,146 +211,58 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 		//super.onOptionsItemSelected(item);
 		int id = item.getItemId();
 		switch(id){
-//			case R.id.home:
-//				MainActivity.openDrawerLayout();
+			case android.R.id.home:
+				MainActivity.openDrawerLayout();
+				break;
+//			case R.id.add_item:
+//				if(getEditMode()) {
+//					addItem();
+//				}else{
+//					Toast toast = Toast.makeText(this.getActivity(),"You must be in edit mode to add info",Toast.LENGTH_LONG);
+//					toast.show();
+//				}
 //				break;
-			case R.id.add_item:
-				final ContentValues cv = new ContentValues();
+			case R.id.edit_mode:
+				toggleEditMode();
 
-				AlertDialog.Builder b = new AlertDialog.Builder(ItemsGridFragment.this.getActivity());
-				b.setTitle("Add Item");
-
-				final LinearLayout layout = new LinearLayout(ItemsGridFragment.this.getContext());
-				layout.setOrientation(LinearLayout.VERTICAL);
-
-				String[] names = getNames();
-				ArrayAdapter<String> adapter = new ArrayAdapter<String>(this.getActivity(),android.R.layout.simple_list_item_1,names);
-
-
-				final AutoCompleteTextView nameBox = new AutoCompleteTextView(ItemsGridFragment.this.getContext());
-				nameBox.setAdapter(adapter);
-				nameBox.setHint("Name");
-				layout.addView(nameBox);
-
-				ArrayList<String> categories = getCategories();
-				ArrayAdapter<String> adapter2 = new ArrayAdapter<String>(this.getActivity(),android.R.layout.simple_list_item_1,categories);
-
-
-				final AutoCompleteTextView categoryBox = new AutoCompleteTextView(ItemsGridFragment.this.getContext());
-				categoryBox.setHint("Category (Required)");
-				categoryBox.setAdapter(adapter2);
-				layout.addView(categoryBox);
-
-				final LinearLayout buttonLayout = new LinearLayout(ItemsGridFragment.this.getContext());
-				buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
-
-					final ImageButton getPhotoButton = new ImageButton(this.getActivity());
-					getPhotoButton.setImageResource(R.drawable.ic_folder_open_24dp);
-					getPhotoButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-					getPhotoButton.setOnClickListener(new View.OnClickListener() {
+				if(getEditMode()){
+					Toast toast = Toast.makeText(this.getActivity(), getString(R.string.edit_mode_turned_on),Toast.LENGTH_LONG);
+					toast.show();
+					item.setIcon(R.drawable.ic_create_24dp_accent);
+					MainActivity.mFab.setVisibility(View.VISIBLE);
+					MainActivity.mFab.setOnClickListener(new View.OnClickListener() {
 						@Override
-						public void onClick(View v) {
-							Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-							startActivityForResult(intent, RESULT_LOAD_IMAGE);
-							final String photoUriString = getGetPhotoUriString();
-						}
-					});
-
-					final ImageButton takePhotoButton = new ImageButton(this.getActivity());
-					takePhotoButton.setImageResource(R.drawable.ic_photo_camera_24dp);
-					takePhotoButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-					takePhotoButton.setOnClickListener(new View.OnClickListener() {
-						@Override
-						public void onClick(View v) {
-							Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-							startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
-							final String photoUriString = getTakePhotoUriString();
-						}
-					});
-
-					final ImageButton enterUrlButton = new ImageButton(this.getActivity());
-					enterUrlButton.setImageResource(R.drawable.ic_attachment_24dp);
-					enterUrlButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-					final EditText photoUrlBox = new EditText(ItemsGridFragment.this.getContext());
-
-				enterUrlButton.setOnClickListener(new View.OnClickListener() {
-					int count = 0;
-
-					@Override
-						public void onClick(View v) {
-							if(count <=0) {
-//							EditText enterUrlBox = new EditText(ItemsGridFragment.this.getActivity());
-//							enterUrlBox
-								photoUrlBox.setHint("Enter a photo URL");
-								layout.addView(photoUrlBox);
+						public void onClick(View view) {
+							if (mInterstitialAd.isLoaded()) {
+								mInterstitialAd.show();
 							}
-						count++;
-
-					}
-					});
-
-
-				buttonLayout.addView(getPhotoButton);
-				buttonLayout.addView(takePhotoButton);
-				buttonLayout.addView(enterUrlButton);
-
-				layout.addView(buttonLayout);
-
-				b.setView(layout);
-
-				b.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int whichButton) {
-						String name = nameBox.getText().toString();
-						String category = categoryBox.getText().toString();
-						String photoUrl = photoUrlBox.getText().toString();
-						cv.put(ItemsContract.ItemsEntry.COLUMN_NAME, name);
-						cv.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, category);
-						if(photoUrl.length() <= 0) {
-							Log.d(LOG_TAG, "photoUrl is " + photoUrl);
-							if (getGetPhotoUriString() != null && !getGetPhotoUriString().equals("")){
-								photoUrl = getGetPhotoUriString();
-							}else if (getTakePhotoUriString() != null && !getTakePhotoUriString().equals("")){
-								photoUrl = getTakePhotoUriString();
-							}
-							//cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID, R.drawable.v_face);
+							addItem();
+							requestNewInterstitial();
 						}
-						Log.d("IGF", "photoUrl is " + photoUrl);
-						cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, photoUrl);
-
-						Uri itemUri = getActivity().getContentResolver().insert(ItemsContract.ItemsEntry.CONTENT_URI, cv);
-
-						mItemsGridAdapter.notifyDataSetChanged();
-
-						MainActivity.addTab(category);
-
-						Log.d(LOG_TAG, "inserted: itemUri = " + itemUri);
-					}
-				});
-				b.setNegativeButton("CANCEL", null);
-				b.create().show();
-
-//				b.setTitle("Please enter an item name");
-//				b.setView(input);
-//				b.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-//					@Override
-//					public void onClick(DialogInterface dialog, int whichButton) {
-//						// SHOULD NOW WORK
-//						String name = input.getText().toString();
-//						cv.put(ItemsContract.ItemsEntry.COLUMN_NAME, name);
-//					}
-//				});
-//				b.setNegativeButton("CANCEL", null);
-//				b.create().show();
-
-
-
+					});
+					//item.setTitle(getString(R.string.edit_mode_on));
+				}else{
+					Toast toast = Toast.makeText(this.getActivity(), getString(R.string.edit_mode_turned_off),Toast.LENGTH_LONG);
+					toast.show();
+					item.setIcon(R.drawable.ic_create_24dp);
+					MainActivity.mFab.setVisibility(View.GONE);
+					//item.setTitle(getString(R.string.edit_mode_off));
+				}
 				break;
 			default:
 		}
 		return true;
 	}
 
+	private void loadPreviewImage(String path) {
+		File file = new File(path);
+//		Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+
+		Glide.with(this)
+				.load(path)
+				.fitCenter()
+				.into(mPreviewImage);
+	}
 //	@Override
 //	public void onInflate(Activity activity, AttributeSet attrs, Bundle savedInstanceState){
 //		super.onInflate(activity,attrs,savedInstanceState);
@@ -337,12 +288,6 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 		View rootView = inflater.inflate(R.layout.fragment_item_grid, container, false);
 
 		mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recyclerview);
-
-		StaggeredGridLayoutManager sglm = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
-		sglm.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS);
-		mRecyclerView.setLayoutManager(sglm);
-		final long mLong = 0;
-
 		mItemsGridAdapter = new ItemsGridAdapter(getActivity(),new ItemsGridAdapter.ItemsGridAdapterOnClickHandler(){
 
 			@Override
@@ -363,7 +308,182 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 		//mItemsGridAdapter.setHasStableIds(true);
 
 		mRecyclerView.setAdapter(mItemsGridAdapter);
+		//mItemsGridAdapter.setHasStableIds(true);
+		int numColumns = getResources().getInteger(R.integer.staggered_grid_columns);
+		StaggeredGridLayoutManager sglm = new StaggeredGridLayoutManager(numColumns, StaggeredGridLayoutManager.VERTICAL);
+		sglm.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS);
+		//LinearLayoutManager sglm = new LinearLayoutManager(this.getContext(),LinearLayoutManager.VERTICAL,false);
+		mRecyclerView.setLayoutManager(sglm);
 		return rootView;
+	}
+
+	public void addItem(){
+		final ContentValues cv = new ContentValues();
+
+		AlertDialog.Builder b = new AlertDialog.Builder(ItemsGridFragment.this.getActivity());
+		b.setTitle("Add Item");
+
+		mLayout = new LinearLayout(ItemsGridFragment.this.getContext());
+		mLayout.setOrientation(LinearLayout.VERTICAL);
+//				final LinearLayout layout = new LinearLayout(ItemsGridFragment.this.getContext());
+//				layout.setOrientation(LinearLayout.VERTICAL);
+
+		String[] names = getNames();
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this.getActivity(),android.R.layout.simple_list_item_1,names);
+
+
+		final AutoCompleteTextView nameBox = new AutoCompleteTextView(ItemsGridFragment.this.getContext());
+		nameBox.setAdapter(adapter);
+		nameBox.setHint("Name");
+		mLayout.addView(nameBox);
+
+		ArrayList<String> categories = getCategories();
+		ArrayAdapter<String> adapter2 = new ArrayAdapter<String>(this.getActivity(),android.R.layout.simple_list_item_1,categories);
+
+
+		final AutoCompleteTextView categoryBox = new AutoCompleteTextView(ItemsGridFragment.this.getContext());
+		categoryBox.setHint("Category (Required)");
+		categoryBox.setAdapter(adapter2);
+		mLayout.addView(categoryBox);
+		mPhotoUrlBox = new EditText(ItemsGridFragment.this.getContext());
+		mPhotoUrlBox.setHint("Enter a photo URL");
+
+		final LinearLayout buttonLayout = new LinearLayout(ItemsGridFragment.this.getContext());
+		buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
+
+		final ImageButton getPhotoButton = new ImageButton(this.getActivity());
+		getPhotoButton.setImageResource(R.drawable.ic_folder_open_24dp);
+		getPhotoButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+		getPhotoButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				mLayout.removeView(mPreviewImage);
+				mLayout.removeView(mPhotoUrlBox);
+				Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+				startActivityForResult(intent, RESULT_LOAD_IMAGE);
+//							final String photoUriString = getGetPhotoUriString();
+			}
+		});
+
+		final ImageButton takePhotoButton = new ImageButton(this.getActivity());
+		takePhotoButton.setImageResource(R.drawable.ic_photo_camera_24dp);
+		takePhotoButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+		takePhotoButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				mLayout.removeView(mPreviewImage);
+				mLayout.removeView(mPhotoUrlBox);
+				Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+				startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+//							final String photoUriString = getTakePhotoUriString();
+			}
+		});
+
+//					final ImageButton enterUrlButton = new ImageButton(this.getActivity());
+//					enterUrlButton.setImageResource(R.drawable.ic_attachment_24dp);
+//					enterUrlButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+//
+//
+//				enterUrlButton.setOnClickListener(new View.OnClickListener() {
+//					int count = 0;
+//
+//					@Override
+//					public void onClick(View v) {
+////						if (count <= 0) {
+////							EditText enterUrlBox = new EditText(ItemsGridFragment.this.getActivity());
+////							enterUrlBox
+////							mPhotoUrlBox.setHint("Enter a photo URL");
+//							//mLayout.addView(mPhotoUrlBox);
+////						}
+////						count++;
+//
+//					}
+//				});
+
+
+
+		mPreviewImage= new ImageView(ItemsGridFragment.this.getContext());
+		int pixels = (int) dipToPixels(ItemsGridFragment.this.getContext(), 200);
+		LinearLayout.LayoutParams params =
+				new LinearLayout.LayoutParams(pixels, ViewGroup.LayoutParams.WRAP_CONTENT);
+		params.gravity = Gravity.CENTER;
+		mPreviewImage.setLayoutParams(params);
+
+		//Initialize photoUrlBox and setText or hint
+//				String photoUriString = mPhotoUrlBox.getText().toString();
+//				if(photoUriString != null && !photoUriString.equals("")) {
+//					mPhotoUrlBox.setText(photoUriString);
+//					loadPreviewImage(photoUriString);
+//				}else{
+//					mPhotoUrlBox.setHint("Enter photo URL");
+//				}
+
+		buttonLayout.addView(getPhotoButton);
+		buttonLayout.addView(takePhotoButton);
+		//buttonLayout.addView(enterUrlButton);
+
+		mPhotoUrlBox.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+				String url = s.toString();
+				loadPreviewImage(url);
+			}
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+			}
+
+			@Override
+			public void afterTextChanged(Editable s) {
+				Log.d(LOG_TAG, "text changed = " + s);
+				String url = s.toString();
+				loadPreviewImage(url);
+			}
+		});
+		//mLayout.addView(mPhotoUrlBox);
+		//mLayout.addView(mPreviewImage);
+		mLayout.addView(buttonLayout);
+		mLayout.addView(mPhotoUrlBox);
+		mLayout.addView(mPreviewImage);
+
+		b.setView(mLayout);
+
+		b.setPositiveButton("ADD", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int whichButton) {
+				String name = nameBox.getText().toString();
+				String category = categoryBox.getText().toString();
+				String photoUrl = mPhotoUrlBox.getText().toString();
+				cv.put(ItemsContract.ItemsEntry.COLUMN_NAME, name);
+				cv.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, category);
+				if(photoUrl.length() <= 0) {
+					Log.d(LOG_TAG, "photoUrl is " + photoUrl);
+					if (getGetPhotoUriString() != null && !getGetPhotoUriString().equals("")){
+						photoUrl = getGetPhotoUriString();
+					}else if (getTakePhotoUriString() != null && !getTakePhotoUriString().equals("")){
+						photoUrl = getTakePhotoUriString();
+					}
+					//cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID, R.drawable.v_face);
+				}
+				Log.d("IGF", "photoUrl is " + photoUrl);
+				cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, photoUrl);
+
+				Uri itemUri = getActivity().getContentResolver().insert(ItemsContract.ItemsEntry.CONTENT_URI, cv);
+
+				mItemsGridAdapter.notifyDataSetChanged();
+
+				MainActivity.addTab(category);
+
+				Log.d(LOG_TAG, "inserted: itemUri = " + itemUri);
+			}
+		});
+		b.setNegativeButton("CANCEL", null);
+		b.create().show();
+	}
+
+	public static float dipToPixels(Context context, float dipValue) {
+		DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+		return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue, metrics);
 	}
 
 	@Override
@@ -375,12 +495,28 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 	@Override
 	public void onResume(){
 		super.onResume();
+		if(getEditMode()){
+			mEditMode = true;
+			MainActivity.mFab.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View view) {
+					if (mInterstitialAd.isLoaded()) {
+						mInterstitialAd.show();
+					}
+					addItem();
+					requestNewInterstitial();
+				}
+			});
+		}else{
+			mEditMode = false;
+		}
 	}
 
 	public void onSaveInstanceState(Bundle outState){
-		//mItemsGridAdapter.onSaveInstanceState(outState);
 		super.onSaveInstanceState(outState);
 	}
+
+
 
 	/**
 	 * LOADER METHODS
@@ -418,8 +554,9 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 			insertStarterData();
 			Log.d("TAG", "insertStarterData ran");
 		}
-
 		mItemsGridAdapter.swapCursor(data);
+
+
 	}
 
 	@Override
@@ -495,22 +632,33 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 			cursor.moveToFirst();
 			String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
 			setGetPhotoUriString(picPath);
-			//setGetPhotoUriString(selectedImage.toString());
+			if(picPath !=null && !picPath.equals("")){
+				loadPreviewImage(picPath);
+//				try {
+					mPhotoUrlBox.setText(picPath);
+					mLayout.addView(mPhotoUrlBox);
+					mLayout.addView(mPreviewImage);
+//				}catch (Exception e){
+//					e.printStackTrace();
+//				}
+			}
 			Log.d("IGF", "getGetPhotoUriString = " + selectedImage.toString());
-//			String[] filePathColumn = {MediaStore.Images.Media.DATA};
-//			Cursor cursor = getActivity().getContentResolver().query(selectedImage, filePathColumn, null, null, null);
-//			cursor.moveToFirst();
-//			int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-//			String picturePath = cursor.getString(columnIndex);
-//			cursor.close();
-//			setGetPhotoUriString(picturePath);//            ImageView imageView = (ImageView) findViewById(R.id.imgView);
-//            imageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
 		}
 		if (requestCode == REQUEST_IMAGE_CAPTURE){
 			if (resultCode == this.getActivity().RESULT_OK){
 				Bundle extras = data.getExtras();
 				Uri takenPictureUri = data.getData();
-				setTakePhotoUriString(takenPictureUri.toString());
+				String[] filePathCol = {MediaStore.Images.Media.DATA};
+				Cursor cursor = this.getActivity().getContentResolver().query(takenPictureUri, filePathCol, null, null, null);
+				cursor.moveToFirst();
+				String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
+				setTakePhotoUriString(picPath);
+				if(picPath !=null && !picPath.equals("")){
+					loadPreviewImage(picPath);
+					mPhotoUrlBox.setText(picPath);
+					mLayout.addView(mPhotoUrlBox);
+					mLayout.addView(mPreviewImage);
+				}
 				//sendPicToDb(takenPictureUri);
 			}
 		}

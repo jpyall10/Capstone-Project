@@ -10,7 +10,6 @@
     <string name="category_people">people</string>
     <string name="category_animals">animals</string>
     <string name="category_food">food</string>
-    <string name="item_name_label">name</string>
     <string name="animal_label_cat">cat</string>
     <string name="animal_label_cow">cow</string>
     <string name="animal_label_dog">dog</string>
@@ -72,5 +71,13 @@
 
     <string name="edit_mode_off">Edit Mode</string>
     <string name="edit_mode_on">Exit Edit Mode</string>
+    <string name="edit_mode_turned_on">Edit Mode Is On</string>
+    <string name="edit_mode_turned_off">Edit Mode Is Off</string>
+
+
     <string name="android_resource_uri_base">android.resource://com.example.android.project7/</string>
+    <string name="username">Username</string>
+    <string name="backup_db">Backup db</string>
+    <string name="restore_db">Restore db</string>
+    <string name="add_card_edit_mode_warning">You must be in edit mode to add info</string>
 </resources>

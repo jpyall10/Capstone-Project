@@ -28,7 +28,8 @@
                 app:collapsedTitleTextAppearance="@style/TextAppearance.AppCompat.Title"
                 app:expandedTitleTextAppearance="@style/ItemTitle"
                 app:expandedTitleMarginStart="48dp"
-                app:expandedTitleMarginEnd="64dp">
+                app:expandedTitleMarginEnd="64dp"
+                android:inputType="textCapSentences">
                 <!--android:fitsSystemWindows="true"-->
 
                 <ImageView
@@ -74,10 +75,11 @@
             android:layout_width="wrap_content"
             app:layout_anchor="@id/appbar"
             app:layout_anchorGravity="bottom|right|end"
-            android:src="@drawable/ic_play_arrow_24dp"
+            android:src="@drawable/ic_add_24dp"
             android:layout_margin="@dimen/fab_margin"
             android:clickable="true"
             android:onClick="onFabClick"/>
 
     </android.support.design.widget.CoordinatorLayout>
+
 </FrameLayout>

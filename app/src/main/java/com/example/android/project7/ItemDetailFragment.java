@@ -7,6 +7,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -32,9 +34,13 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.android.project7.data.ItemsContract;
+import com.google.android.gms.common.api.GoogleApiClient;
+
+import java.util.List;
 
 /**
  * Created by Jon on 7/10/2016.
@@ -78,7 +84,8 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
             ItemsContract.CardsEntry.COLUMN_ITEM_KEY,
             ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_LABEL,
             ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_DESCRIPTION,
-            ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_PHOTO
+            ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_PHOTO,
+            ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_LOCATION
     };
 
 //    static final int COL_ITEM_ID = 0;
@@ -92,6 +99,7 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
     static final int COL_EXTRA_CARD_LABEL = 2;
     static final int COL_EXTRA_CARD_DESCRIPTION = 3;
     static final int COL_EXTRA_CARD_PHOTO = 4;
+    static final int COL_EXTRA_LOCATION = 5;
 
 //    Create a newInstance method if you want to pass info to the fragment
 //            maybe to have types of cards like (info, memories, photo frame, etc.)
@@ -103,10 +111,11 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
         fragment.setArguments(args);
         return fragment;
     }
+
     public interface Callback {
         public void onItemSelected(Long id, ItemDetailAdapter.ItemDetailAdapterViewHolder vh);
         public void onItemLongSelected(Long id);
-        public void onBackdropChanged(String uriString);
+        //public void onBackdropChanged(String uriString);
     }
 
     @Override
@@ -121,75 +130,158 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
             mItemId = null;
            // mCategory = null;
         }
+
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();  // Always call the superclass method first
+        if(ItemDetailActivity.getEditMode()){
+            Log.d(LOG_TAG, "onResume edit mode is true");
+            ItemDetailActivity.mEditMode = true;
+            ItemDetailActivity.fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    addCard();
+                }
+            });
+        }else{
+            Log.d(LOG_TAG, "onResume edit mode is false");
+            ItemDetailActivity.mEditMode = false;
+        }
+    }
+
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        //super.onCreateOptionsMenu(menu, inflater);
+        super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu_detail_fragment, menu);
+        if(ItemDetailActivity.getEditMode()){
+            menu.getItem(1).setIcon(R.drawable.ic_create_24dp_accent);
+        }else{
+            menu.getItem(1).setIcon(R.drawable.ic_create_24dp);
+        }
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
-        //super.onOptionsItemSelected(item);
+        super.onOptionsItemSelected(item);
         int id = item.getItemId();
         Log.d(LOG_TAG, "item selected is " + item.toString() + " " + item.getItemId());
 
 
-        switch(id){
-            case R.id.add_card:
-                Log.d(LOG_TAG, "add card was pressed ");
-                final ContentValues cv = new ContentValues();
+        switch(id) {
+            case R.id.edit_mode:
+                ItemDetailActivity.toggleEditMode();
 
-                AlertDialog.Builder b = new AlertDialog.Builder(ItemDetailFragment.this.getActivity());
-                b.setTitle("Add");
-
-                final LinearLayout layout = new LinearLayout(ItemDetailFragment.this.getContext());
-                layout.setOrientation(LinearLayout.VERTICAL);
-
-
-                final EditText titleBox = new EditText(ItemDetailFragment.this.getContext());
-                titleBox.setHint("Title");
-                layout.addView(titleBox);
-
-
-                final EditText descriptionBox = new EditText(ItemDetailFragment.this.getContext());
-                descriptionBox.setHint("Description");
-                layout.addView(descriptionBox);
-
-                final EditText photoUrlBox = new EditText(ItemDetailFragment.this.getContext());
-                photoUrlBox.setHint("Enter a photo URL");
-                layout.addView(photoUrlBox);
-
-                b.setView(layout);
-
-                b.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        String title = titleBox.getText().toString();
-                        String description = descriptionBox.getText().toString();
-                        String photoUrl = photoUrlBox.getText().toString();
-                        cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_LABEL, title);
-                        cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_DESCRIPTION, description);
-                        cv.put(ItemsContract.CardsEntry.COLUMN_ITEM_KEY, mItemId);
-                        if(photoUrl.length() <= 0){
-                            Log.d(LOG_TAG, "photoUrl is " + photoUrl);
-                            cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_PHOTO, "");
-                        }else{
-                            cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_PHOTO, photoUrl);
+                if(ItemDetailActivity.getEditMode()) {
+                    Toast toast = Toast.makeText(this.getActivity(), getString(R.string.edit_mode_turned_on),Toast.LENGTH_LONG);
+                    toast.show();
+                    item.setIcon(R.drawable.ic_create_24dp_accent);
+                    ItemDetailActivity.fab.setVisibility(View.VISIBLE);
+                    ItemDetailActivity.fab.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+//                                if (mInterstitialAd.isLoaded()) {
+//                                    mInterstitialAd.show();
+//                                }
+                                addCard();
+//                                requestNewInterstitial();
                         }
-                        Uri itemUri = ItemsContract.ItemsEntry.buildItemUri(mItemId);
-                        Uri cardUri = getActivity().getContentResolver().insert(ItemsContract.CardsEntry.buildCardsByItemUri(itemUri), cv);
-                        mItemDetailAdapter.notifyDataSetChanged();
-
-                        Log.d(LOG_TAG, "inserted: cardUri = " + cardUri);
-                    }
-                });
-                b.setNegativeButton("CANCEL", null);
-                b.create().show();
+                    });
+                    //item.setTitle(getString(R.string.edit_mode_on));
+                }else{
+                    Toast toast = Toast.makeText(this.getActivity(), getString(R.string.edit_mode_turned_off),Toast.LENGTH_LONG);
+                    toast.show();
+                    item.setIcon(R.drawable.ic_create_24dp);
+                    ItemDetailActivity.fab.setVisibility(View.GONE);
+                    //item.setTitle(getString(R.string.edit_mode_off));
+                }
                 break;
             default:
         }
+//            case R.id.edit_mode:
+//                ItemDetailActivity.toggleEditMode();
+//
+//                if(ItemDetailActivity.getEditMode()) {
+//                    item.setIcon(R.drawable.ic_create_24dp_accent);
+//                    ItemDetailActivity.fab.setVisibility(View.VISIBLE);
+//                    ItemDetailActivity.fab.setOnClickListener(new View.OnClickListener() {
+//                        @Override
+//                        public void onClick(View view) {
+////                                if (mInterstitialAd.isLoaded()) {
+////                                    mInterstitialAd.show();
+////                                }
+////
+////                                requestNewInterstitial();
+//                            addCard();
+//                        }
+//                    });
+//                    //item.setTitle(getString(R.string.edit_mode_on));
+//                }else{
+//                    item.setIcon(R.drawable.ic_create_24dp);
+//                    ItemDetailActivity.fab.setVisibility(View.GONE);
+//                    //item.setTitle(getString(R.string.edit_mode_off));
+//                }
+//                break;
+//            default:
+//        }
         return true;
     }
+
+    public void addCard() {
+        final ContentValues cv = new ContentValues();
+
+        AlertDialog.Builder b = new AlertDialog.Builder(ItemDetailFragment.this.getActivity());
+        b.setTitle("Add");
+
+        final LinearLayout layout = new LinearLayout(ItemDetailFragment.this.getContext());
+        layout.setOrientation(LinearLayout.VERTICAL);
+
+
+        final EditText titleBox = new EditText(ItemDetailFragment.this.getContext());
+        titleBox.setHint("Title");
+        layout.addView(titleBox);
+
+
+        final EditText descriptionBox = new EditText(ItemDetailFragment.this.getContext());
+        descriptionBox.setHint("Description");
+        layout.addView(descriptionBox);
+
+        final EditText photoUrlBox = new EditText(ItemDetailFragment.this.getContext());
+        photoUrlBox.setHint("Enter a photo URL");
+        layout.addView(photoUrlBox);
+
+        b.setView(layout);
+
+        b.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int whichButton) {
+                String title = titleBox.getText().toString();
+                String description = descriptionBox.getText().toString();
+                String photoUrl = photoUrlBox.getText().toString();
+                cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_LABEL, title);
+                cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_DESCRIPTION, description);
+                cv.put(ItemsContract.CardsEntry.COLUMN_ITEM_KEY, mItemId);
+                if (photoUrl.length() <= 0) {
+                    Log.d(LOG_TAG, "photoUrl is " + photoUrl);
+                    cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_PHOTO, "");
+                } else {
+                    cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_PHOTO, photoUrl);
+                }
+                Uri itemUri = ItemsContract.ItemsEntry.buildItemUri(mItemId);
+                Uri cardUri = getActivity().getContentResolver().insert(ItemsContract.CardsEntry.buildCardsByItemUri(itemUri), cv);
+                mItemDetailAdapter.notifyDataSetChanged();
+                Log.d(LOG_TAG, "inserted: cardUri = " + cardUri);
+            }
+        });
+        b.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+        b.create().show();
+    }
+
+
     public void setGetPhotoUriString(String getPhotoUriString) {
         mGetPhotoUriString = getPhotoUriString;
     }
@@ -280,7 +372,7 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
             Cursor cursor = getActivity().getContentResolver().query(selectedImage, filePathCol, null, null, null);
             cursor.moveToFirst();
             String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
-            setGetPhotoUriString(picPath);
+            //setGetPhotoUriString(picPath);
             //loadPreviewImage(selectedImage);
             Log.d("IGF", "getGetPhotoUriString = " + picPath);
         }
@@ -288,7 +380,7 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
             if (resultCode == this.getActivity().RESULT_OK){
                 Bundle extras = data.getExtras();
                 Uri takenPictureUri = data.getData();
-                setTakePhotoUriString(takenPictureUri.toString());
+//                setTakePhotoUriString(takenPictureUri.toString());
                 //loadPreviewImage(takenPictureUri.toString());
             }
         }

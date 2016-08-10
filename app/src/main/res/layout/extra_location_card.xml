@@ -1,8 +1,11 @@
 <!--<?xml version="1.0" encoding="utf-8"?>-->
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:style="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+
     android:id="@+id/extra_card"
     android:layout_margin="@dimen/extra_card_view_default_margin"
 
@@ -21,49 +24,32 @@
             android:paddingBottom="16dp"
             android:paddingStart="16dp"
             android:paddingLeft="16dp"
-            android:paddingRight="16dp"
             android:paddingEnd="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="24sp"
-            android:maxLines="2"
             android:textAppearance="@style/TextAppearance.AppCompat.Title" />
 
-        <ImageView
-            android:id="@+id/extra_image"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:scaleType="centerCrop"
-            android:layout_gravity="center"
-            android:src="@drawable/v_face"
-            android:visibility="gone"
-            />
-        <!--<FrameLayout-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:padding="12dp">-->
-            <!--<fragment-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="300dp"-->
-                <!--android:id="@+id/map"-->
-                <!--android:name="com.google.android.gms.maps.MapFragment" />-->
-        <!--</FrameLayout>-->
         <TextView
-            android:id="@+id/extra_description"
+            android:id="@+id/extra_location"
             android:layout_gravity="bottom"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="start"
+            android:gravity="left"
             android:paddingTop="0dp"
             android:paddingStart="14dp"
             android:paddingLeft="14dp"
             android:paddingEnd="14dp"
-            android:paddingRight="14dp"
-            android:paddingBottom="14dp"
-            android:text="test"
             style="@style/Widget.CardContent"
             android:textAppearance="?attr/textAppearanceListItem"/>
         <!--android:textColor="@android:color/white"-->
+
+        <fragment
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.MapFragment"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
     </LinearLayout>
 </android.support.v7.widget.CardView>

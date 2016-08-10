@@ -34,6 +34,7 @@ public class ItemsContract {
 //        public static final String COLUMN_CARD_KEY = "card_key";
         public static final String COLUMN_PHOTO_RES_ID = "photo_res_id";
         public static final String COLUMN_PHOTO_EXTRA_1 = "photo_extra_1";
+        public static final String COLUMN_SOUND_STRING = "sound_string";
 
 
 
@@ -69,7 +70,7 @@ public class ItemsContract {
         public static final String COLUMN_EXTRA_CARD_LABEL = "card_label";
         public static final String COLUMN_EXTRA_CARD_DESCRIPTION = "card_description";
         public static final String COLUMN_EXTRA_CARD_PHOTO = "card_photo";
-
+        public static final String COLUMN_EXTRA_CARD_LOCATION = "card_location";
 //        public static final Uri CONTENT_URI =
 //                BASE_CONTENT_URI.buildUpon().appendPath(PATH_CARDS).build();
 

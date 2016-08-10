@@ -16,10 +16,16 @@
   -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
-        android:id="@+id/add_card"
-        android:title="@string/add_card"
-        app:showAsAction="ifRoom" />
+    <!--<item-->
+        <!--android:id="@+id/add_card"-->
+        <!--android:title="@string/add_card"-->
+        <!--app:showAsAction="ifRoom"-->
+        <!--android:icon="@drawable/ic_add_24dp"/>-->
     <!--android:title="@string/edit_mode_off"-->
+    <item android:id="@+id/edit_mode"
+        android:title="@string/edit_mode_off"
+        app:showAsAction="ifRoom"/>
+    <!--android:icon="@drawable/ic_create_24dp"-->
+
 
 </menu>

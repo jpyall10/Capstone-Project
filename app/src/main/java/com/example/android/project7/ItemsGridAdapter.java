@@ -22,7 +22,6 @@ import com.example.android.project7.data.ItemsContract;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
-//import com.facebook.drawee.view.SimpleDraweeView;
 
 public class ItemsGridAdapter
         extends RecyclerView.Adapter<ItemsGridAdapter.ItemsGridAdapterViewHolder> {
@@ -123,8 +122,9 @@ public class ItemsGridAdapter
             Log.d("TAG", "item count is " + getItemCount());
             mCursor.moveToPosition(position);
 //            final int photo;
-            final String name, photoUrl;
+            String name, photoUrl;
             name = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_NAME));
+            name = name.substring(0,1).toUpperCase() + name.substring(1).toLowerCase();
             holder.mTextView.setText(name);
 //            photo = mCursor.getInt(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID));
             photoUrl = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1));

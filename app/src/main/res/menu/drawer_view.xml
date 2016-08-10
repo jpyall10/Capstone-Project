@@ -22,9 +22,13 @@
             android:icon="@drawable/ic_dashboard"
             android:title="@string/add_category" />
         <item
-            android:id="@+id/delete_category"
+            android:id="@+id/backup_db"
             android:icon="@drawable/ic_event"
-            android:title="Messages" />
+            android:title="@string/backup_db" />
+        <item
+            android:id="@+id/restore_db"
+            android:icon="@drawable/ic_event"
+            android:title="@string/restore_db" />
         <!--<item-->
             <!--android:id="@+id/nav_friends"-->
             <!--android:icon="@drawable/ic_headset"-->
