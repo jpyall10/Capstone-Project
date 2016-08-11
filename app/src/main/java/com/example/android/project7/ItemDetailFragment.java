@@ -1,15 +1,13 @@
 package com.example.android.project7;
 
 import android.app.AlertDialog;
-import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.location.Address;
-import android.location.Geocoder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
@@ -18,11 +16,12 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -33,14 +32,12 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.android.project7.data.ItemsContract;
-import com.google.android.gms.common.api.GoogleApiClient;
 
-import java.util.List;
+import java.io.File;
 
 /**
  * Created by Jon on 7/10/2016.
@@ -56,6 +53,8 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
     private String mTakePhotoUriString;
 
     private ImageView mPreviewImage;
+    private LinearLayout addCardLayout;
+    private EditText photoUrlBox;
 
 //    private Uri itemUri;
 
@@ -228,29 +227,98 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
     }
 
     public void addCard() {
+        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
         final ContentValues cv = new ContentValues();
 
         AlertDialog.Builder b = new AlertDialog.Builder(ItemDetailFragment.this.getActivity());
         b.setTitle("Add");
 
-        final LinearLayout layout = new LinearLayout(ItemDetailFragment.this.getContext());
-        layout.setOrientation(LinearLayout.VERTICAL);
+        addCardLayout = new LinearLayout(ItemDetailFragment.this.getContext());
+        addCardLayout.setOrientation(LinearLayout.VERTICAL);
 
 
         final EditText titleBox = new EditText(ItemDetailFragment.this.getContext());
         titleBox.setHint("Title");
-        layout.addView(titleBox);
+        addCardLayout.addView(titleBox);
 
 
         final EditText descriptionBox = new EditText(ItemDetailFragment.this.getContext());
         descriptionBox.setHint("Description");
-        layout.addView(descriptionBox);
+        addCardLayout.addView(descriptionBox);
 
-        final EditText photoUrlBox = new EditText(ItemDetailFragment.this.getContext());
+        //Initialize photoUrlBox and set Hint
+        photoUrlBox = new EditText(ItemDetailFragment.this.getContext());
         photoUrlBox.setHint("Enter a photo URL");
-        layout.addView(photoUrlBox);
+//        layout.addView(photoUrlBox);
 
-        b.setView(layout);
+        //initialize PreviewImageView and set layout params
+        mPreviewImage = new ImageView(this.getActivity());
+        int pixels = (int)ItemDetailActivity.dipToPixels(this.getActivity(),200);
+        LinearLayout.LayoutParams params =
+                new LinearLayout.LayoutParams(pixels, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.gravity = Gravity.CENTER;
+        mPreviewImage.setLayoutParams(params);
+
+        photoUrlBox.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String url = s.toString();
+                loadPreviewImage(url);
+            }
+        });
+
+        //Created buttons Layout
+        final LinearLayout editPictureButtons = new LinearLayout(this.getActivity());
+        editPictureButtons.setOrientation(LinearLayout.HORIZONTAL);
+
+        //create button to get image from files and set onclick
+        final ImageButton getPhotoButton = new ImageButton(this.getActivity());
+        getPhotoButton.setImageResource(R.drawable.ic_folder_open_24dp);
+        getPhotoButton.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        getPhotoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addCardLayout.removeView(mPreviewImage);
+                addCardLayout.removeView(photoUrlBox);
+                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(intent, RESULT_LOAD_IMAGE);
+            }
+        });
+
+        //create button to take a new picture with camera and set onclick
+        final ImageButton takeNewPhotoButton = new ImageButton(this.getActivity());
+        takeNewPhotoButton.setImageResource(R.drawable.ic_photo_camera_24dp);
+        takeNewPhotoButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        takeNewPhotoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addCardLayout.removeView(mPreviewImage);
+                addCardLayout.removeView(photoUrlBox);
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+
+            }
+        });
+
+        //add buttons to button layout
+        editPictureButtons.addView(getPhotoButton);
+        editPictureButtons.addView(takeNewPhotoButton);
+
+        //add buttons, urlbox and preview image to main layout
+        addCardLayout.addView(editPictureButtons);
+        addCardLayout.addView(photoUrlBox);
+        addCardLayout.addView(mPreviewImage);
+        b.setView(addCardLayout);
 
         b.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
@@ -263,24 +331,48 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
                 cv.put(ItemsContract.CardsEntry.COLUMN_ITEM_KEY, mItemId);
                 if (photoUrl.length() <= 0) {
                     Log.d(LOG_TAG, "photoUrl is " + photoUrl);
-                    cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_PHOTO, "");
-                } else {
-                    cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_PHOTO, photoUrl);
+                    if (getGetPhotoUriString() != null && !getGetPhotoUriString().equals("")) {
+                        photoUrl = getGetPhotoUriString();
+                    } else if (getTakePhotoUriString() != null && !getTakePhotoUriString().equals("")) {
+                        photoUrl = getTakePhotoUriString();
+                    }
                 }
+                cv.put(ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_PHOTO, photoUrl);
                 Uri itemUri = ItemsContract.ItemsEntry.buildItemUri(mItemId);
                 Uri cardUri = getActivity().getContentResolver().insert(ItemsContract.CardsEntry.buildCardsByItemUri(itemUri), cv);
                 mItemDetailAdapter.notifyDataSetChanged();
                 Log.d(LOG_TAG, "inserted: cardUri = " + cardUri);
+                getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+
             }
         });
         b.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+
             }
         });
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            b.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+
+                }
+            });
+        }
         b.create().show();
     }
 
+    private void loadPreviewImage(String path) {
+        File file = new File(path);
+//		Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+        Glide.with(this)
+                .load(path)
+                .fitCenter()
+                .into(mPreviewImage);
+    }
 
     public void setGetPhotoUriString(String getPhotoUriString) {
         mGetPhotoUriString = getPhotoUriString;
@@ -365,23 +457,55 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+        //super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == RESULT_LOAD_IMAGE && resultCode == this.getActivity().RESULT_OK && null != data) {
+//            Uri selectedImage = data.getData();
+//            String[] filePathCol = {MediaStore.Images.Media.DATA};
+//            Cursor cursor = getActivity().getContentResolver().query(selectedImage, filePathCol, null, null, null);
+//            cursor.moveToFirst();
+//            String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
+//            setGetPhotoUriString(picPath);
+//            if(picPath !=null && !picPath.equals("")){
+//                loadPreviewImage(picPath);
+////				try {
+//                mPhotoUrlBox.setText(picPath);
+//                mLayout.addView(mPhotoUrlBox);
+//                mLayout.addView(mPreviewImage);
+////				}catch (Exception e){
+////					e.printStackTrace();
+////				}
+//            }
+
             Uri selectedImage = data.getData();
             String[] filePathCol = {MediaStore.Images.Media.DATA};
             Cursor cursor = getActivity().getContentResolver().query(selectedImage, filePathCol, null, null, null);
             cursor.moveToFirst();
             String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
-            //setGetPhotoUriString(picPath);
-            //loadPreviewImage(selectedImage);
+            setGetPhotoUriString(picPath);
             Log.d("IGF", "getGetPhotoUriString = " + picPath);
+            if(picPath !=null && !picPath.equals("")){
+                loadPreviewImage(picPath);
+                photoUrlBox.setText(picPath);
+                addCardLayout.addView(photoUrlBox);
+                addCardLayout.addView(mPreviewImage);
+            }
         }
         if (requestCode == REQUEST_IMAGE_CAPTURE){
             if (resultCode == this.getActivity().RESULT_OK){
                 Bundle extras = data.getExtras();
                 Uri takenPictureUri = data.getData();
-//                setTakePhotoUriString(takenPictureUri.toString());
-                //loadPreviewImage(takenPictureUri.toString());
+                String[] filePathCol = {MediaStore.Images.Media.DATA};
+                Cursor cursor = getActivity().getContentResolver().query(takenPictureUri, filePathCol, null, null, null);
+                cursor.moveToFirst();
+                String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
+                setGetPhotoUriString(picPath);
+                Log.d("IGF", "getTakePhotoUriString = " + picPath);
+                if(picPath !=null && !picPath.equals("")){
+                    loadPreviewImage(picPath);
+                    photoUrlBox.setText(picPath);
+                    addCardLayout.addView(photoUrlBox);
+                    addCardLayout.addView(mPreviewImage);
+                }
             }
         }
     }

@@ -18,16 +18,12 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/add_category"
-            android:icon="@drawable/ic_dashboard"
-            android:title="@string/add_category" />
-        <item
             android:id="@+id/backup_db"
-            android:icon="@drawable/ic_event"
+            android:icon="@drawable/ic_file_download_24dp"
             android:title="@string/backup_db" />
         <item
             android:id="@+id/restore_db"
-            android:icon="@drawable/ic_event"
+            android:icon="@drawable/ic_file_upload_24dp"
             android:title="@string/restore_db" />
         <!--<item-->
             <!--android:id="@+id/nav_friends"-->

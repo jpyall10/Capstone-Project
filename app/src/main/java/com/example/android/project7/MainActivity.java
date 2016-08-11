@@ -9,8 +9,10 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -469,25 +471,46 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     }
     @Override
     public void onItemLongSelected(Long id){
-        AlertDialog.Builder b = new AlertDialog.Builder(MainActivity.this);
-//        b.setTitle("Please enter a category");
-        b.setMessage("Do you want to delete this item?");
-        final Uri myContentUri = ContentUris.withAppendedId(ItemsContract.ItemsEntry.CONTENT_URI,id);
-        Log.d("TAG", "myContentUri = " + myContentUri.toString());
-        b.setPositiveButton(R.string.delete_item, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int whichButton) {
-                // SHOULD NOW WORK
-                int rowsDeleted = getContentResolver().delete(myContentUri, null,null);
+        if(ItemsGridFragment.getEditMode()) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+            AlertDialog.Builder b = new AlertDialog.Builder(MainActivity.this);
+            //        b.setTitle("Please enter a category");
+            b.setMessage("Do you want to delete this item?");
+            final Uri myContentUri = ContentUris.withAppendedId(ItemsContract.ItemsEntry.CONTENT_URI, id);
+            Log.d("TAG", "myContentUri = " + myContentUri.toString());
+            b.setPositiveButton(R.string.delete_item, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    // SHOULD NOW WORK
+                    int rowsDeleted = getContentResolver().delete(myContentUri, null, null);
 
 
-                Log.d("TAG", "rows deleted = " + rowsDeleted);
+                    Log.d("TAG", "rows deleted = " + rowsDeleted);
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
 
+                }
+            });
+            b.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+                }
+            });
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                b.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+                    }
+                });
             }
-        });
-        b.setNegativeButton("CANCEL", null);
-        b.create().show();
+            b.create().show();
+        }else{
+            Toast.makeText(this,getString(R.string.delete_item_warning),Toast.LENGTH_LONG).show();
+        }
     }
+
 
     private static List<String> getCategories(Cursor c){
         List<String> categories = new ArrayList<String>();

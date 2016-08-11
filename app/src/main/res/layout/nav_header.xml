@@ -34,7 +34,7 @@
             android:background="@drawable/rounded_corners"
             android:textAppearance="@style/TextAppearance.AppCompat.Widget.Button"
             android:textAllCaps="false"
-            android:text="Sign Out" />
+            android:text="@string/sign_out_button_text" />
     </LinearLayout>
 
 

@@ -80,4 +80,9 @@
     <string name="backup_db">Backup db</string>
     <string name="restore_db">Restore db</string>
     <string name="add_card_edit_mode_warning">You must be in edit mode to add info</string>
+    <string name="sign_out_button_text">Sign Out</string>
+    <string name="default_name">name</string>
+    <string name="default_category">default</string>
+    <string name="enter_category_warning">You must enter a category to add item</string>
+    <string name="delete_item_warning">You must be in edit mode to delete item</string>
 </resources>

@@ -38,7 +38,7 @@
                     android:layout_height="match_parent"
                     android:scaleType="centerCrop"
                     app:layout_collapseMode="parallax"
-                    android:onClick="onTakePhotoClick"
+                    android:onClick="onPhotoClick"
                     />
                 <android.support.v7.widget.Toolbar
                     android:id="@+id/toolbar"

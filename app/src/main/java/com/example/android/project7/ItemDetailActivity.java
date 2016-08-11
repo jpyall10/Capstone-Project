@@ -1,17 +1,20 @@
 package com.example.android.project7;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
@@ -35,6 +38,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -203,8 +207,11 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 		return false;
 	}
 
+	@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
 	public void editItem(){
 		//create ContentValues to add to Provider
+		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
 		final ContentValues cvEdit = new ContentValues();
 //					final Cursor c = getContentResolver().query(
 //							itemUri,
@@ -314,7 +321,7 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 		bEdit.setView(mLayout);
 
 		//set dialog add button
-		bEdit.setPositiveButton("SAVE", new DialogInterface.OnClickListener() {
+		bEdit.setPositiveButton("SAVE", null);/*new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int whichButton) {
 				String name = editNameBox.getText().toString();
@@ -340,17 +347,65 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 
 				Log.d("IDA", "updatedRows = " + rowsUpdated);
 			}
-		});
+		});*/
 
 		//set dialog cancel button
-		bEdit.setNegativeButton("CANCEL", new DialogInterface.OnClickListener(){
-
+		bEdit.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
+				setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+			}
+		});
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+			bEdit.setOnDismissListener(new DialogInterface.OnDismissListener() {
+				@Override
+				public void onDismiss(DialogInterface dialog) {
+					setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+
+				}
+			});
+		}
+		final AlertDialog d = bEdit.create();
+		d.show();
+
+		Button button = d.getButton(DialogInterface.BUTTON_POSITIVE);
+		button.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				String category = editCategoryBox.getText().toString();
+				if (!category.equals("")) {
+					String name = editNameBox.getText().toString();
+					String photoUrl = mPhotoUrlBox.getText().toString();
+					cvEdit.put(ItemsContract.ItemsEntry.COLUMN_NAME, name);
+					cvEdit.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, category);
+
+					if (photoUrl.length() <= 0) {
+						photoUrl = getString(R.string.android_resource_uri_base) + R.drawable.v_face;
+					}
+					cvEdit.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, photoUrl);
+					Log.d("IGF", "photoUrl is " + photoUrl);
+
+					int rowsUpdated = getContentResolver().
+							update(itemUri, cvEdit, null, null);
+
+					mCursor = getContentResolver().query(itemUri, null, null, null, null);
+					loadBackdrop(photoUrl);
+					mCollapsingToolbar.setTitle(name);
+					MainActivity.addTab(category);
+					toggleEditMode();
+
+					Log.d("IDA", "updatedRows = " + rowsUpdated);
+					d.dismiss();
+					setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+				} else {
+					Toast.makeText(ItemDetailActivity.this, getString(R.string.enter_category_warning), Toast.LENGTH_SHORT).show();
+				}
 
 			}
 		});
-		bEdit.create().show();
+
+
 	}
 
 
@@ -466,7 +521,7 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 	}
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//		super.onActivityResult(requestCode, resultCode, data);
+		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode == MY_DATA_CHECK_CODE) {
 			if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
 				myTTS = new TextToSpeech(this, this);
@@ -528,14 +583,14 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 		}
 	}
 
-	private void takePicture() {
-		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-		startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
-	}
-	public void onTakePhotoClick(View view) {
+//	private void takePicture() {
+//		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//		startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+//	}
+	public void onPhotoClick(View view) {
 
-		if (mEditMode == true){
-			//takePicture();
+		if (getEditMode() == true){
+//			takePicture();
 		}else{
 			readText(mName);
 
@@ -581,6 +636,8 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 	@Override
 	public void onItemLongSelected(Long id) {
 		if(getEditMode()) {
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
 			AlertDialog.Builder b = new AlertDialog.Builder(ItemDetailActivity.this);
 			//        b.setTitle("Please enter a category");
 			b.setMessage("Do you want to delete this card?");
@@ -593,10 +650,25 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 					int rowsDeleted = getContentResolver().delete(myContentUri, null, null);
 
 					Log.d("TAG", "rows deleted = " + rowsDeleted);
+					setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+				}
+			});
+			b.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
 
 				}
 			});
-			b.setNegativeButton("CANCEL", null);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+				b.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+
+                    }
+                });
+			}
 			b.create().show();
 		}
 	}

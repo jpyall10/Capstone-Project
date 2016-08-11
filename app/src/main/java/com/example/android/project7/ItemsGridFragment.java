@@ -1,9 +1,12 @@
 package com.example.android.project7;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.support.v4.app.LoaderManager;
 import android.content.ContentValues;
@@ -28,6 +31,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -42,6 +46,7 @@ import com.example.android.project7.data.ItemsContract;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.MobileAds;
 
 public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 	private final String LOG_TAG = this.getClass().getSimpleName();
@@ -64,8 +69,8 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 	private ImageView mPreviewImage;
 	private static LinearLayout mLayout;
 
-	private static final int RESULT_LOAD_IMAGE = 0;
-	private static final int REQUEST_IMAGE_CAPTURE = 1;
+	private static final int RESULT_LOAD_IMAGE = 10;
+	private static final int REQUEST_IMAGE_CAPTURE = 11;
 
 
 	private static final int ITEMS_LOADER = 0;
@@ -124,6 +129,7 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 //		Fresco.initialize(this.getActivity());
+		MobileAds.initialize(getActivity().getApplicationContext(), "ca-app-pub-3364537753375699~3862655769");
 		setHasOptionsMenu(true);
 		Bundle args = getArguments();
 		if (args != null){
@@ -133,6 +139,14 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 		}
 
 		mInterstitialAd = new InterstitialAd(this.getContext());
+//		App ID: ca-app-pub-3364537753375699~3862655769
+//		Ad unit ID: ca-app-pub-3364537753375699/5339388964
+
+		//Real Ads
+		//mInterstitialAd.setAdUnitId("ca-app-pub-3364537753375699/5339388964");
+
+
+		//Test Ads
 		mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
 
 		mInterstitialAd.setAdListener(new AdListener() {
@@ -224,8 +238,11 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 //				break;
 			case R.id.edit_mode:
 				toggleEditMode();
-
 				if(getEditMode()){
+					if (mInterstitialAd.isLoaded()) {
+						mInterstitialAd.show();
+					}
+					requestNewInterstitial();
 					Toast toast = Toast.makeText(this.getActivity(), getString(R.string.edit_mode_turned_on),Toast.LENGTH_LONG);
 					toast.show();
 					item.setIcon(R.drawable.ic_create_24dp_accent);
@@ -233,11 +250,8 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 					MainActivity.mFab.setOnClickListener(new View.OnClickListener() {
 						@Override
 						public void onClick(View view) {
-							if (mInterstitialAd.isLoaded()) {
-								mInterstitialAd.show();
-							}
 							addItem();
-							requestNewInterstitial();
+//							ItemsGridFragment.this.getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
 						}
 					});
 					//item.setTitle(getString(R.string.edit_mode_on));
@@ -317,7 +331,9 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 		return rootView;
 	}
 
-	public void addItem(){
+	public void addItem() {
+		getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
 		final ContentValues cv = new ContentValues();
 
 		AlertDialog.Builder b = new AlertDialog.Builder(ItemsGridFragment.this.getActivity());
@@ -359,7 +375,7 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 			public void onClick(View v) {
 				mLayout.removeView(mPreviewImage);
 				mLayout.removeView(mPhotoUrlBox);
-				Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+				Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 				startActivityForResult(intent, RESULT_LOAD_IMAGE);
 //							final String photoUriString = getGetPhotoUriString();
 			}
@@ -448,37 +464,87 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 
 		b.setView(mLayout);
 
-		b.setPositiveButton("ADD", new DialogInterface.OnClickListener() {
+		b.setPositiveButton("ADD", null);/*new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int whichButton) {
-				String name = nameBox.getText().toString();
-				String category = categoryBox.getText().toString();
-				String photoUrl = mPhotoUrlBox.getText().toString();
-				cv.put(ItemsContract.ItemsEntry.COLUMN_NAME, name);
-				cv.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, category);
-				if(photoUrl.length() <= 0) {
-					Log.d(LOG_TAG, "photoUrl is " + photoUrl);
-					if (getGetPhotoUriString() != null && !getGetPhotoUriString().equals("")){
-						photoUrl = getGetPhotoUriString();
-					}else if (getTakePhotoUriString() != null && !getTakePhotoUriString().equals("")){
-						photoUrl = getTakePhotoUriString();
-					}
-					//cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID, R.drawable.v_face);
-				}
-				Log.d("IGF", "photoUrl is " + photoUrl);
-				cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, photoUrl);
 
-				Uri itemUri = getActivity().getContentResolver().insert(ItemsContract.ItemsEntry.CONTENT_URI, cv);
-
-				mItemsGridAdapter.notifyDataSetChanged();
-
-				MainActivity.addTab(category);
-
-				Log.d(LOG_TAG, "inserted: itemUri = " + itemUri);
+			}
+		});*/
+		b.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
 			}
 		});
-		b.setNegativeButton("CANCEL", null);
-		b.create().show();
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+			b.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+                }
+            });
+		}
+		final AlertDialog d = b.create();
+		d.show();
+
+//		class CustomListener implements View.OnClickListener {
+//			private final Dialog dialog;
+//			public CustomListener(Dialog dialog) {
+//				this.dialog = dialog;
+//			}
+//			@Override
+//			public void onClick(View v) {
+//				// put your code here
+//				String categoryText = categoryBox.getText().toString();
+//				if(categoryText != null && !categoryText.equals("")){
+//					dialog.dismiss();
+//				}else{
+//					Toast.makeText(ItemsGridFragment.this.getActivity(), "Invalid data", Toast.LENGTH_SHORT).show();
+//				}
+//			}
+//		}
+
+		Button button = d.getButton(AlertDialog.BUTTON_POSITIVE);
+		button.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				String category = categoryBox.getText().toString();
+				if(!category.equals("")){
+					//d.dismiss();
+					String name = nameBox.getText().toString();
+					String photoUrl = mPhotoUrlBox.getText().toString();
+
+					if (name == null || name.equals("")) {
+						name = getString(R.string.default_name);
+					}
+					cv.put(ItemsContract.ItemsEntry.COLUMN_NAME, name);
+					cv.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, category);
+					if (photoUrl.length() <= 0) {
+						Log.d(LOG_TAG, "photoUrl is " + photoUrl);
+						if (getGetPhotoUriString() != null && !getGetPhotoUriString().equals("")) {
+							photoUrl = getGetPhotoUriString();
+						} else if (getTakePhotoUriString() != null && !getTakePhotoUriString().equals("")) {
+							photoUrl = getTakePhotoUriString();
+						}
+						//cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID, R.drawable.v_face);
+					}
+					Log.d("IGF", "photoUrl is " + photoUrl);
+					cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, photoUrl);
+
+					Uri itemUri = getActivity().getContentResolver().insert(ItemsContract.ItemsEntry.CONTENT_URI, cv);
+
+					mItemsGridAdapter.notifyDataSetChanged();
+
+					MainActivity.addTab(category);
+
+					Log.d(LOG_TAG, "inserted: itemUri = " + itemUri);
+					d.dismiss();
+					ItemsGridFragment.this.getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+				}else{
+					Toast.makeText(ItemsGridFragment.this.getActivity(), getString(R.string.enter_category_warning), Toast.LENGTH_SHORT).show();
+				}
+			}
+		});
 	}
 
 	public static float dipToPixels(Context context, float dipValue) {
@@ -504,6 +570,7 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 						mInterstitialAd.show();
 					}
 					addItem();
+//					ItemsGridFragment.this.getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
 					requestNewInterstitial();
 				}
 			});
@@ -659,7 +726,6 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 					mLayout.addView(mPhotoUrlBox);
 					mLayout.addView(mPreviewImage);
 				}
-				//sendPicToDb(takenPictureUri);
 			}
 		}
 	}
