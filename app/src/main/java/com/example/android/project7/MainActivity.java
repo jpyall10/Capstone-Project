@@ -1,25 +1,28 @@
 package com.example.android.project7;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
+import android.content.ActivityNotFoundException;
 import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -29,33 +32,19 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.test.SingleLaunchActivityTestCase;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
 import com.example.android.project7.data.ItemsContract;
-import com.example.android.project7.data.ItemsDbHelper;
-import com.google.android.gms.ads.AdListener;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -69,7 +58,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -89,31 +77,30 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     private static Button mSignOutButton;
     public static FloatingActionButton mFab;
 
-    private static boolean editMode = false;
+    private static LinearLayout mGetFileLayout;
+    private static EditText mFilePathEditText;
+    private static String mBackupPath;
 
-    private String mGetPhotoUriString;
-    private String mTakePhotoUriString;
-    private EditText mPhotoUrlBox;
-    private ImageView mPreviewImage;
-    private LinearLayout mLayout;
-
-    private InterstitialAd mInterstitialAd;
     private GoogleApiClient mGoogleApiClient;
 
     private static final int MY_DATA_CHECK_CODE = 0;
     private static final int RC_SIGN_IN = 1;
+    private static final int FILE_SELECT_CODE=2;
     private String mDisplayName;
+
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setContentView(R.layout.activity_main);
         Log.d("MA", "database path is : " + getDatabasePath("items.db"));
-//        Uri contentUri = getIntent() != null ? getIntent().getData() : null;
-//        if(contentUri!=null){
-//            Log.d("MA", "contentUri = " + contentUri.toString());
-//        }
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
@@ -124,10 +111,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
-        setContentView(R.layout.activity_main);
+        startAsyncInsert();
+
         Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
 
         Intent checkTTSIntent = new Intent();
         checkTTSIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
@@ -138,6 +125,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         ab.setDisplayHomeAsUpEnabled(true);
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
         mNavigationView = (NavigationView) findViewById(R.id.nav_view);
 
@@ -151,37 +139,27 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         }
 
         mFab = (FloatingActionButton) findViewById(R.id.fab);
-//        mFab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                //Put code here to add a member
-//                if (mInterstitialAd.isLoaded()) {
-//                    mInterstitialAd.show();
-//                }
-//                requestNewInterstitial();
-//            }
-//        });
         if (ItemsGridFragment.getEditMode()){
             mFab.setVisibility(View.VISIBLE);
         }else{
             mFab.setVisibility(View.GONE);
         }
 
+
         mTabLayout = (TabLayout) findViewById(R.id.tabs);
         mTabLayout.setupWithViewPager(mViewPager);
         mTabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
+    }
 
-//        mInterstitialAd = new InterstitialAd(this);
-//        mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
-//
-//        mInterstitialAd.setAdListener(new AdListener() {
-//            @Override
-//            public void onAdClosed() {
-//                requestNewInterstitial();
-//            }
-//        });
-//
-//        requestNewInterstitial();
+    private void startAsyncInsert(){
+        Cursor c = getContentResolver().query(ItemsContract.ItemsEntry.CONTENT_URI,null,null,null,null);
+
+        if(c == null || !c.moveToFirst()){
+            StarterDataAsyncTask sdat = new StarterDataAsyncTask(this);
+            sdat.execute();
+        }else{
+            c.close();
+        }
     }
 
     private void updateNavigationHeader(){
@@ -200,10 +178,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 mSignInButton.setVisibility(View.VISIBLE);
                 mSignOutButton.setVisibility(View.GONE);
             }
-            //View headerView = nav.getHeaderView(0);
-            //nav.removeView(userName);
-//            userName.setText(getDisplayName());
-//            nav.addView(userName);
         }
     }
 
@@ -214,7 +188,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     private void signOut(){
         Auth.GoogleSignInApi.signOut(mGoogleApiClient);
         mGoogleApiClient.clearDefaultAccountAndReconnect();
-        //updateNavigationHeader();
         mSignInButton.setVisibility(View.VISIBLE);
         mSignOutButton.setVisibility(View.GONE);
         mUsername.setVisibility(View.GONE);
@@ -223,7 +196,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     }
 
     public static void openDrawerLayout(){
-//        mDrawerLayout.openDrawer(Gravity.LEFT);
         Log.d("MA", "openDrawer ran");
         mDrawerLayout.openDrawer(GravityCompat.START);
     }
@@ -241,10 +213,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
             mCategories.add(animals);
             mCategories.add(food);
             mCategories.add(people);
-
-//            mCategories.add(animals.substring(0,1).toUpperCase() + animals.substring(1,animals.length()));
-//            mCategories.add(food.substring(0,1).toUpperCase() + food.substring(1,food.length()));
-//            mCategories.add(people.substring(0,1).toUpperCase() + people.substring(1,people.length()));
         }else{
             mCategories = getCategories(c);
             for (String category : mCategories){
@@ -252,9 +220,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         }
 
         for (String category : mCategories){
-            //category = category.substring(0,1).toUpperCase() + category.substring(1);
             addCategory(ItemsGridFragment.newInstance(category.toLowerCase()),
-                    category /*.substring(0,1).toUpperCase() + category.substring(1).toLowerCase()*/);
+                    category);
         }
         mViewPager.setAdapter(mAdapter);
         c.close();
@@ -267,21 +234,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item){
-        int id = item.getItemId();
-        Log.d("MA", "item ID = " + item.getItemId() + " string is " + item.toString());
-        switch (id){
-//            case android.R.id.home:
-//                openDrawerLayout();
-//                break;
-            default:
-        }
-        return false;
-    }
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item){
+//        int id = item.getItemId();
+//        Log.d("MA", "item ID = " + item.getItemId() + " string is " + item.toString());
+//        switch (id){
+//            default:
+//        }
+//        return false;
+//    }
+
     private static void addCategory(Fragment fragment, String category){
-//        Adapter adapter = new Adapter(getSupportFragmentManager());
-//        Bundle args = new Bundle();
         mArgs.putString("category", category);
         mAdapter.addFragment(fragment, category);
         mViewPager.setAdapter(mAdapter);
@@ -290,6 +253,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
     private void setupDrawerContent(NavigationView navigationView){
         View headerView = navigationView.getHeaderView(0);
+
+        ImageButton closeButton = (ImageButton)headerView.findViewById(R.id.close_drawer_button);
+        closeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDrawerLayout.closeDrawer(GravityCompat.START);
+            }
+        });
+
         mSignInButton = (SignInButton)headerView.findViewById(R.id.sign_in_button);
         mSignInButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -297,13 +269,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 int id = v.getId();
                 switch (id) {
                     case R.id.sign_in_button:
-                        Log.d("MA", "Sign in clicked");
                         signIn();
                         break;
                     default:
                 }
             }
         });
+
         mSignOutButton = (Button)headerView.findViewById(R.id.sign_out_button);
         mSignOutButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -311,16 +283,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 int id = v.getId();
                 switch (id) {
                     case R.id.sign_out_button:
-                        Log.d("MA", "Sign out clicked");
                         signOut();
+                        mDrawerLayout.closeDrawer(GravityCompat.START);
                         break;
                     default:
                 }
             }
         });
-        //mSignOutButton.setVisibility(View.GONE);
+
         mUsername = (TextView)headerView.findViewById(R.id.username);
-        //mUsername.setVisibility(View.GONE);
         updateNavigationHeader();
         Log.d("MA", "Username is " + mUsername.getText().toString());
 
@@ -332,13 +303,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                         int id = menuItem.getItemId();
                         switch (id) {
                             case R.id.backup_db:
-                                final String inFileName = "/data/user/0/com.example.android.project7/databases/items.db";
+                                verifyStoragePermissions(MainActivity.this);
+                                final String inFileName = getString(R.string.default_db_path);
                                 File dbFile = new File(inFileName);
                                 try {
                                     FileInputStream fis = new FileInputStream(dbFile);
-                                    String outFileName = Environment.getExternalStorageDirectory() + "/items_db_copy.db";
-                                    Log.d("MA", "outFileName path = " + outFileName);
+                                    String outFileName = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + getString(R.string.db_copy_name);
                                     OutputStream output = new FileOutputStream(outFileName);
+                                    Log.d("MA", "outFileName = " + outFileName);
 
                                     byte[] buffer = new byte[1024];
                                     int length;
@@ -349,40 +321,115 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                                     output.flush();
                                     output.close();
                                     fis.close();
+                                    Log.d("MA", "File saved to ... " + outFileName);
+                                    Toast.makeText(MainActivity.this,"File saved to ... " + outFileName,Toast.LENGTH_LONG).show();
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
                                 break;
                             case R.id.restore_db:
-                                final String savedFile = Environment.getExternalStorageDirectory() + "/items_db_copy.db";
-                                File savedDBFile = new File(savedFile);
-                                try {
-                                    FileInputStream fis = new FileInputStream(savedDBFile);
-                                    String outFileName = "/data/user/0/com.example.android.project7/databases/items.db";
-                                    Log.d("MA", "outFileName path = " + outFileName);
-                                    OutputStream output = new FileOutputStream(outFileName);
 
-                                    byte[] buffer = new byte[1024];
-                                    int length;
-                                    while ((length = fis.read(buffer)) > 0) {
-                                        output.write(buffer, 0, length);
+                                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+                                AlertDialog.Builder b = new AlertDialog.Builder(MainActivity.this);
+                                b.setTitle(getString(R.string.restore_db_title));
+
+                                mGetFileLayout = new LinearLayout(MainActivity.this);
+                                mGetFileLayout.setOrientation(LinearLayout.VERTICAL);
+                                mGetFileLayout.setPadding(50, 5, 50, 5);
+                                mGetFileLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+                                mFilePathEditText = new EditText(MainActivity.this);
+                                mFilePathEditText.setHint(getString(R.string.db_restore_hint));
+
+                                final ImageButton openFileManagerButton = new ImageButton(MainActivity.this);
+                                openFileManagerButton.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                                openFileManagerButton.setImageResource(R.drawable.ic_folder_open_24dp);
+                                openFileManagerButton.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        //get file intent
+                                        mGetFileLayout.removeView(mFilePathEditText);
+                                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                                        intent.setType(getString(R.string.get_content_type_file));
+                                        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+                                        try {
+                                            startActivityForResult(
+                                                    Intent.createChooser(intent, "Select a File to Upload"),
+                                                    FILE_SELECT_CODE);
+                                        } catch (ActivityNotFoundException ex) {
+                                            // Potentially direct the user to the Market with a Dialog
+                                            Toast.makeText(MainActivity.this, "Please install a File Manager.",
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
                                     }
+                                });
+                                mGetFileLayout.addView(mFilePathEditText);
+                                mGetFileLayout.addView(openFileManagerButton);
+                                b.setView(mGetFileLayout);
+                                b.setPositiveButton(getString(R.string.restore_db_button), new DialogInterface.OnClickListener() {
 
-                                    output.flush();
-                                    output.close();
-                                    fis.close();
-                                } catch (Exception e) {
-                                    e.printStackTrace();
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        String filePathString = mFilePathEditText.getText().toString();
+                                        if (filePathString.equals("")) {
+                                            mBackupPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + getString(R.string.db_copy_name);//getString(R.string.default_restore_path);
+                                        } else {
+                                            mBackupPath = filePathString;
+                                        }
+                                        Log.d("restore", "mBackupPath = " + mBackupPath);
+                                        File savedDBFile = new File(mBackupPath);
+                                        try {
+                                            FileInputStream fis = new FileInputStream(savedDBFile);
+                                            String outFileName = getString(R.string.default_db_path);
+                                            Log.d("MA", "outFileName path = " + outFileName);
+                                            OutputStream output = new FileOutputStream(outFileName);
+
+                                            byte[] buffer = new byte[1024];
+                                            int length;
+                                            while ((length = fis.read(buffer)) > 0) {
+                                                output.write(buffer, 0, length);
+                                            }
+
+                                            output.flush();
+                                            output.close();
+                                            fis.close();
+
+                                            Intent restartApp = new Intent(MainActivity.this, MainActivity.class);
+                                            int mPendingIntentId = 123456;
+                                            PendingIntent mPendingIntent = PendingIntent.getActivity(MainActivity.this, mPendingIntentId,
+                                                    restartApp, PendingIntent.FLAG_CANCEL_CURRENT);
+
+                                            AlarmManager mgr = (AlarmManager) MainActivity.this.getSystemService(Context.ALARM_SERVICE);
+                                            mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+                                            System.exit(0);
+                                        }catch (FileNotFoundException f){
+                                            Toast.makeText(MainActivity.this,"No backup found", Toast.LENGTH_LONG).show();
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+
+                                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+                                    }
+                                });
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                                    b.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                        @Override
+                                        public void onDismiss(DialogInterface dialog) {
+                                            mBackupPath = getString(R.string.default_restore_path);
+                                            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+                                        }
+                                    });
                                 }
-
-                                Intent restartApp = new Intent(MainActivity.this, MainActivity.class);
-                                int mPendingIntentId = 123456;
-                                PendingIntent mPendingIntent = PendingIntent.getActivity(MainActivity.this, mPendingIntentId,
-                                        restartApp, PendingIntent.FLAG_CANCEL_CURRENT);
-
-                                AlarmManager mgr = (AlarmManager)MainActivity.this.getSystemService(Context.ALARM_SERVICE);
-                                mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
-                                System.exit(0);
+                                b.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+                                        mBackupPath = getString(R.string.default_restore_path);
+                                    }
+                                });
+                                b.create().show();
                                 break;
 
                             default:
@@ -392,15 +439,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                         return true;
                     }
                 });
-    }
-
-    private void exportDB(){
-        File sd = Environment.getExternalStorageDirectory();
-        File data = Environment.getDataDirectory();
-        FileChannel source = null;
-        FileChannel destination = null;
-        String currenDBPath = "/data/" + "com.example.android.project7" + "/databases/" + "items.db";
-        String backupDBPath = "";
     }
 
     public static void addTab(String category) {
@@ -420,6 +458,20 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
             return;
         }
 
+    }
+
+    public static void verifyStoragePermissions(Activity activity) {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
     }
 
     @Override
@@ -467,7 +519,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     public void onItemSelected(Uri contentUri, ItemsGridAdapter.ItemsGridAdapterViewHolder vh){
         Intent intent = new Intent(this, ItemDetailActivity.class)
                 .setData(contentUri);
-        startActivity(intent);
+        intent.putExtra("mPosition",vh.getAdapterPosition());
+
+        // Pass data object in the bundle and populate details activity.
+        ActivityOptionsCompat options = ActivityOptionsCompat.
+                makeSceneTransitionAnimation(this, vh.mAvatar, getString(R.string.transition_image_avatar) + vh.getAdapterPosition());
+        startActivity(intent, options.toBundle());
     }
     @Override
     public void onItemLongSelected(Long id){
@@ -511,7 +568,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         }
     }
 
-
     private static List<String> getCategories(Cursor c){
         List<String> categories = new ArrayList<String>();
         c.moveToFirst();
@@ -533,32 +589,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
             setDisplayName(displayName);
             Toast toast = Toast.makeText(this, displayName + " signed in successfully", Toast.LENGTH_LONG);
             toast.show();//mStatusTextView.setText(getString(R.string.signed_in_fmt, acct.getDisplayName()));
-            //updateUI(true);
         } else {
             // Signed out, show unauthenticated UI.
-            //updateUI(false);
-        }
-    }
-
-
-
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == MY_DATA_CHECK_CODE) {
-            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-                myTTS = new TextToSpeech(this, this);
-            }
-            else {
-                Intent installTTSIntent = new Intent();
-                installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-                startActivity(installTTSIntent);
-            }
-        }
-        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
-        if (requestCode == RC_SIGN_IN) {
-            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            handleSignInResult(result);
-            updateNavigationHeader();
         }
     }
 
@@ -573,11 +605,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         }
     }
 
-
     @Override
     public void onInit(int status) {
         if (status == TextToSpeech.SUCCESS){
-            myTTS.setLanguage(Locale.US);
+            try {
+                myTTS.setLanguage(Locale.US);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
         }else if(status == TextToSpeech.ERROR){
             Toast.makeText(this, "Sorry! Text to Speech failed", Toast.LENGTH_LONG).show();
         }
@@ -587,136 +622,33 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         myTTS.speak(text, TextToSpeech.QUEUE_FLUSH, null);
     }
 
-//    private void requestNewInterstitial() {
-//        AdRequest adRequest = new AdRequest.Builder()
-//                .addTestDevice("DEVICE_ID_EMULATOR") //("03157df319a82d3d")
-//                .build();
-//        mInterstitialAd.loadAd(adRequest);
-//    }
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == MY_DATA_CHECK_CODE) {
+            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+                myTTS = new TextToSpeech(this, this);
+            }
+            else {
+                Intent installTTSIntent = new Intent();
+                installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+                startActivity(installTTSIntent);
+            }
+        }
+        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN && resultCode == RESULT_OK) {
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            handleSignInResult(result);
+            updateNavigationHeader();
+        }
 
-//    private void addItem(){
-//        final ContentValues cv = new ContentValues();
-//
-//        AlertDialog.Builder b = new AlertDialog.Builder(this);
-//        b.setTitle("Add Item");
-//
-//        mLayout = new LinearLayout(this);
-//        mLayout.setOrientation(LinearLayout.VERTICAL);
-//
-//        String[] names = getNames();
-//        ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this,android.R.layout.simple_list_item_1,names);
-//
-//
-//        final AutoCompleteTextView nameBox = new AutoCompleteTextView(this);
-//        nameBox.setAdapter(adapter);
-//        nameBox.setHint("Name");
-//        mLayout.addView(nameBox);
-//
-//        ArrayList<String> categories = getCategories();
-//        ArrayAdapter<String> adapter2 = new ArrayAdapter<String>(MainActivity.this,android.R.layout.simple_list_item_1,categories);
-//
-//
-//        final AutoCompleteTextView categoryBox = new AutoCompleteTextView(this);
-//        categoryBox.setHint("Category (Required)");
-//        categoryBox.setAdapter(adapter2);
-//        mLayout.addView(categoryBox);
-//        mPhotoUrlBox = new EditText(this);
-//        mPhotoUrlBox.setHint("Enter a photo URL");
-//
-//        final LinearLayout buttonLayout = new LinearLayout(this);
-//        buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
-//
-//        final ImageButton getPhotoButton = new ImageButton(this);
-//        getPhotoButton.setImageResource(R.drawable.ic_folder_open_24dp);
-//        getPhotoButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-//        getPhotoButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                mLayout.removeView(mPreviewImage);
-//                mLayout.removeView(mPhotoUrlBox);
-//                Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-//                startActivityForResult(intent, RESULT_LOAD_IMAGE);
-//            }
-//        });
-//
-//        final ImageButton takePhotoButton = new ImageButton(this);
-//        takePhotoButton.setImageResource(R.drawable.ic_photo_camera_24dp);
-//        takePhotoButton.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-//        takePhotoButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                mLayout.removeView(mPreviewImage);
-//                mLayout.removeView(mPhotoUrlBox);
-//                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//                startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
-//            }
-//        });
-//
-//        mPreviewImage= new ImageView(this);
-//        int pixels = (int) dipToPixels(this, 200);
-//        LinearLayout.LayoutParams params =
-//                new LinearLayout.LayoutParams(pixels, ViewGroup.LayoutParams.WRAP_CONTENT);
-//        params.gravity = Gravity.CENTER;
-//        mPreviewImage.setLayoutParams(params);
-//
-//        buttonLayout.addView(getPhotoButton);
-//        buttonLayout.addView(takePhotoButton);
-//
-//        mPhotoUrlBox.addTextChangedListener(new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//                String url = s.toString();
-//                loadPreviewImage(url);
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-//                String url = s.toString();
-//                loadPreviewImage(url);
-//            }
-//        });
-//
-//        mLayout.addView(buttonLayout);
-//        mLayout.addView(mPhotoUrlBox);
-//        mLayout.addView(mPreviewImage);
-//
-//        b.setView(mLayout);
-//
-//        b.setPositiveButton("ADD", new DialogInterface.OnClickListener() {
-//            @Override
-//            public void onClick(DialogInterface dialog, int whichButton) {
-//                String name = nameBox.getText().toString();
-//                String category = categoryBox.getText().toString();
-//                String photoUrl = mPhotoUrlBox.getText().toString();
-//                cv.put(ItemsContract.ItemsEntry.COLUMN_NAME, name);
-//                cv.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, category);
-//                if(photoUrl.length() <= 0) {
-//                    if (getGetPhotoUriString() != null && !getGetPhotoUriString().equals("")){
-//                        photoUrl = getGetPhotoUriString();
-//                    }else if (getTakePhotoUriString() != null && !getTakePhotoUriString().equals("")){
-//                        photoUrl = getTakePhotoUriString();
-//                    }
-//                    //cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID, R.drawable.v_face);
-//                }
-//                Log.d("IGF", "photoUrl is " + photoUrl);
-//                cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, photoUrl);
-//
-//                Uri itemUri = getContentResolver().insert(ItemsContract.ItemsEntry.CONTENT_URI, cv);
-//
-//                ItemsGridFragment.mItemsGridAdapter.notifyDataSetChanged();
-//
-//                MainActivity.addTab(category);
-//
-//            }
-//        });
-//        b.setNegativeButton("CANCEL", null);
-//        b.create().show();
-//
-//
-//
-//    }
+        // Result returned from get file dialog
+        if (requestCode == FILE_SELECT_CODE && resultCode == RESULT_OK){
+            Uri uri = data.getData();
+            String filePath = uri.getPath().toString();//Images.Media.DATA};
+            Log.d("MA", "filePath = " + filePath);
+            mFilePathEditText.setText(filePath);
+            mGetFileLayout.addView(mFilePathEditText);
+
+        }
+    }
 }

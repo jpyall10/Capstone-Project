@@ -1,54 +1,40 @@
 package com.example.android.project7;
 
 import android.content.Context;
-import android.content.SyncAdapterType;
 import android.database.Cursor;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.support.v7.widget.CardView;
+import android.os.Build;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.android.project7.data.ItemsContract;
-import com.squareup.picasso.Picasso;
-
-import java.io.File;
 
 public class ItemsGridAdapter
         extends RecyclerView.Adapter<ItemsGridAdapter.ItemsGridAdapterViewHolder> {
 
-    //private static final float ASPECT_RATIO = 4.0f/3;
     private Cursor mCursor;
     final private Context mContext;
     final private ItemsGridAdapterOnClickHandler mClickHandler;
 
     public class ItemsGridAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener,View.OnLongClickListener {
 
-        //public final CardView mView;
         public final ImageView mAvatar;
         public final TextView mTextView;
-//        public final LinearLayout mCheckableLayout;
 
         public ItemsGridAdapterViewHolder(View v) {
             super(v);
-            //mView = (CardView)v.findViewById(R.id.card_view);
             mAvatar = (ImageView) v.findViewById(R.id.avatar);
             mTextView = (TextView) v.findViewById(R.id.text1);
-            //mCheckbox = (ImageView) v.findViewById(R.id.checkbox);
-//            mCheckableLayout = (LinearLayout) v.findViewById(R.id.linear_layout);
             v.setOnLongClickListener(this);
             v.setOnClickListener(this);
             mTextView.setOnClickListener(this);
-//            mTextView.setOnClickListener(this);
         }
 
         @Override
@@ -83,24 +69,10 @@ public class ItemsGridAdapter
         }
     }
 
-//    public Item getValueAt(int position) {
-//        return mCursor.get(position);
-//    }
-
     public static interface ItemsGridAdapterOnClickHandler {
         void onClick(Long id, ItemsGridAdapterViewHolder vh);
         void onLongClick(Long id);
     }
-
-//    public ItemsGridAdapter(Context context, Cursor cursor, int flags, int loaderID){
-//        //super(context,cursor,flags);
-//        //context.getTheme().resolveAttribute(R.attr.selectableItemBackground, mTypedValue, true);
-//        //mBackground = mTypedValue.resourceId;
-//        mContext = context;
-//        mCursor = cursor;
-//        //sLoaderID = loaderID;
-//        //mItems = items;
-//    }
 
     public ItemsGridAdapter(Context context, ItemsGridAdapterOnClickHandler handler){
         mContext = context;
@@ -111,8 +83,6 @@ public class ItemsGridAdapter
     public ItemsGridAdapterViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.list_item, parent, false);
-        //view.setBackgroundResource(mBackground);
-        //return new RecyclerView.ViewHolder(view);
         return new ItemsGridAdapterViewHolder(view);
     }
 
@@ -121,68 +91,33 @@ public class ItemsGridAdapter
         if(mCursor != null && mCursor.moveToFirst()){
             Log.d("TAG", "item count is " + getItemCount());
             mCursor.moveToPosition(position);
-//            final int photo;
             String name, photoUrl;
             name = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_NAME));
-            name = name.substring(0,1).toUpperCase() + name.substring(1).toLowerCase();
-            holder.mTextView.setText(name);
-//            photo = mCursor.getInt(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID));
+            TextUtils.StringSplitter splitter = new TextUtils.SimpleStringSplitter(' ');
+            splitter.setString(name);
+            String capitalizedName = "";
+            for(String s : splitter){
+                capitalizedName += s.substring(0,1).toUpperCase() + s.substring(1).toLowerCase() + " ";
+            }
+
+            holder.mTextView.setText(capitalizedName);
             photoUrl = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1));
             Log.d("IGA", "photo url = " + photoUrl + " at position " + position);
-            Uri photoUri;
-            int height, width;
-            if (photoUrl != null && !photoUrl.equals("")) {
-                Log.d("TAG", "Glide ran with photo url" + photoUrl);
-                photoUri = Uri.parse(photoUrl);
-//                holder.mAvatar.setImageURI(photoUri);
+            if (photoUrl == null || photoUrl.equals("")) {
+                //default image if cursor has no image
+                photoUrl = mContext.getString(R.string.android_resource_uri_base) + R.drawable.cat_1;
+            }
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                holder.mAvatar.setTransitionName(mContext.getString(R.string.transition_image_avatar)+position);
             }
-////            else if (photo > 0){
-////                Log.d("TAG", "Glide ran with photo int " + photo);
-////                photoUri = Uri.parse("android.resource://com.example.android.project7/" + photo);
-//////                holder.mAvatar.setImageURI(photoUri);
-            else{
-                photoUri = Uri.parse("android.resource://com.example.android.project7/" + R.drawable.v_face);
-                Log.d("TAG", "Glide ran with photouri " + photoUri);
-            }
-//            Picasso.with(holder.mAvatar.getContext()) //
-//                    .load(photoUri) //
-//                    .placeholder(R.drawable.v_face) //
-////                    .error(R.drawable.error) //
-////                    .fit() //
-////                    .tag(context) //
-//                    .into(holder.mAvatar);
+            Log.d("IGA","transition name = " + mContext.getString(R.string.transition_image_avatar)+position);
             Glide.with(holder.mAvatar.getContext())
                     .load(photoUrl)
                     .fitCenter()
                     .into(holder.mAvatar);
 
-
-//            final ImageView avatar = holder.mAvatar;
-//            //final TextView nameBox = holder.mTextView;
-//            ViewTreeObserver vto = avatar.getViewTreeObserver();
-//            vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-//                public boolean onPreDraw() {
-//                    int finalHeight,finalWidth;
-//                    avatar.getViewTreeObserver().removeOnPreDrawListener(this);
-//                    finalHeight = avatar.getMeasuredHeight();
-//                    finalWidth = avatar.getMeasuredWidth();
-//                    return true;
-//                }
-//            });
-
-
-//            height = holder.mAvatar.getHeight();
-//            width = holder.mAvatar.getWidth();
-
             Log.d("IGA", "OnBindViewHolder ran " + " and photo, name " + photoUrl + ", " + name);
-
-//            Log.d("IGA", "OnBindViewHolder ran " + " position = " + position + "height, width: " + height + ", " + width);
-
-            //holder.mAvatar.setAspectRatio(ASPECT_RATIO);
-            //holder.mAvatar.setImageURI(uri);
-            //holder.mAvatar.setTransitionName(getString(R.string.transition_image) +
-            //        position);
         }
     }
 

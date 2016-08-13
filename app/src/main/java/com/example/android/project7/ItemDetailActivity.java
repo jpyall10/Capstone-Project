@@ -29,6 +29,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -54,17 +55,17 @@ import java.util.List;
 import java.util.Locale;
 
 public class ItemDetailActivity extends AppCompatActivity implements TextToSpeech.OnInitListener, ItemDetailFragment.Callback {
-	private static final int RESULT_LOAD_IMAGE = 3;
-//	public static final String EXTRA_NAME = "item_name";
-//	public static final String EXTRA_PHOTO = "photo_id";
-//	public static final String EXTRA_DESCRIPTION = "description";
-
 	private ViewPager mViewPager;
 	private Adapter mAdapter;
 
 	private ImageView mPreviewImage;
 	private LinearLayout mLayout;
 	private EditText mPhotoUrlBox;
+
+	private int mPosition;
+
+	private String mGetPhotoUriString;
+	private String mTakePhotoUriString;
 
 	private  String mName;
 	private  String mPhotoUriString;
@@ -73,7 +74,6 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 	private TextToSpeech myTTS;
 
 	private Uri itemUri;
-	private Uri mCardsUri;
 	private Cursor mCursor;
 
 	private CollapsingToolbarLayout mCollapsingToolbar;
@@ -82,13 +82,7 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 	private int MY_DATA_CHECK_CODE = 0;
 
 	private static final int REQUEST_IMAGE_CAPTURE = 1;
-//	private static final int REQUEST_VIDEO_CAPTURE = 2;
-	public static final int MEDIA_TYPE_IMAGE = 100;
-	public static final int MEDIA_TYPE_VIDEO = 200;
-
-	private static final String IMAGE_DIRECTORY_NAME = "Teach Me";
-
-	private Uri fileUri;
+	private static final int RESULT_LOAD_IMAGE = 3;
 
 	static class Adapter extends FragmentPagerAdapter {
 		private final List<Fragment> mFragments = new ArrayList<>();
@@ -121,24 +115,22 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_detail);
 
-
-
-		//ab.setDisplayHomeAsUpEnabled(true);
-
-		//imgPreview = (ImageView) findViewById(R.id.imageView);
-
 		Intent intent = getIntent();
 		itemUri = intent.getData();
+		mPosition = intent.getIntExtra("mPosition",0);
+
 		Log.d("TAG", "itemUri = " + itemUri);
-
-
-
 
 		mCursor = getContentResolver().query(itemUri,null,null,null,null);
 		mCursor.moveToFirst();
 		mName = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_NAME));//intent.getStringExtra(EXTRA_NAME);
+		TextUtils.StringSplitter splitter = new TextUtils.SimpleStringSplitter(' ');
+		splitter.setString(mName);
+		String capitalizedName = "";
+		for(String s : splitter){
+			capitalizedName += s.substring(0,1).toUpperCase() + s.substring(1).toLowerCase() + " ";
+		}
 		mPhotoUriString = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1));
-		//final String description = intent.getStringExtra(EXTRA_DESCRIPTION);
 
 		Intent checkTTSIntent = new Intent();
 		checkTTSIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
@@ -152,12 +144,11 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 		ab.setDisplayHomeAsUpEnabled(true);
 
 		mCollapsingToolbar = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
-		mCollapsingToolbar.setTitle(mName);
+		mCollapsingToolbar.setTitle(capitalizedName);
 
 		//final MediaPlayer mp = MediaPlayer.create(this, R.raw.dogs_barking);
 
 		fab = (FloatingActionButton)findViewById(R.id.fab);
-		//fab.setImageURI(Uri.parse("android.resource://com.example.android.project7/R.drawable.ic_add_24dp"));
 		if (getEditMode()){
 			fab.setVisibility(View.VISIBLE);
 		}else{
@@ -168,7 +159,7 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 				1);
 
 		if (mPhotoUriString == null || mPhotoUriString.equals("")){
-			mPhotoUriString = getString(R.string.android_resource_uri_base) + R.drawable.v_face;
+			mPhotoUriString = getString(R.string.android_resource_uri_base) + R.drawable.cat_1;
 		} else if (mPhotoUriString != null && !mPhotoUriString.equals("")){
 			loadBackdrop(mPhotoUriString);
 		}
@@ -176,6 +167,7 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 
 		mViewPager = (ViewPager)findViewById(R.id.viewpager);
 		setupViewPager();
+
 	}
 
 	@Override
@@ -183,6 +175,20 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 		super.onCreateOptionsMenu(menu);
 		getMenuInflater().inflate(R.menu.menu_detail_activity, menu);
 		return true;
+	}
+
+	public void setGetPhotoUriString(String getPhotoUriString) {
+		mGetPhotoUriString = getPhotoUriString;
+	}
+	public String getGetPhotoUriString(){
+		return mGetPhotoUriString;
+	}
+
+	public void setTakePhotoUriString(String takePhotoUriString) {
+		mTakePhotoUriString = takePhotoUriString;
+	}
+	public String getTakePhotoUriString(){
+		return mTakePhotoUriString;
 	}
 
 	@Override
@@ -193,7 +199,6 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 				this.onBackPressed();
 				break;
 			case R.id.edit_item:
-				//boolean editMode = getEditMode();
 				if(getEditMode()) {
 					editItem();
 				}else{
@@ -201,7 +206,6 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 					toast.show();
 				}
 				break;
-//					menuItem.setTitle(R.string.edit_mode_off);
 			default:
 		}
 		return false;
@@ -213,9 +217,7 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
 		final ContentValues cvEdit = new ContentValues();
-//					final Cursor c = getContentResolver().query(
-//							itemUri,
-//							new String[]{ItemsContract.ItemsEntry.COLUMN_NAME, ItemsContract.ItemsEntry.COLUMN_CATEGORY, ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1}, null, null, null);
+
 		//Start Dialog Builder
 		AlertDialog.Builder bEdit = new AlertDialog.Builder(this);
 		bEdit.setTitle("Edit Item");
@@ -321,33 +323,7 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 		bEdit.setView(mLayout);
 
 		//set dialog add button
-		bEdit.setPositiveButton("SAVE", null);/*new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int whichButton) {
-				String name = editNameBox.getText().toString();
-				String category = editCategoryBox.getText().toString();
-				String photoUrl = mPhotoUrlBox.getText().toString();
-				cvEdit.put(ItemsContract.ItemsEntry.COLUMN_NAME, name);
-				cvEdit.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, category);
-
-				if (photoUrl.length() <= 0){
-					photoUrl = getString(R.string.android_resource_uri_base) + R.drawable.v_face;
-				}
-				cvEdit.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, photoUrl);
-				Log.d("IGF", "photoUrl is " + photoUrl);
-
-				int rowsUpdated = getContentResolver().
-						update(itemUri, cvEdit, null, null);
-
-				mCursor = getContentResolver().query(itemUri,null,null,null,null);
-				loadBackdrop(photoUrl);
-				mCollapsingToolbar.setTitle(name);
-				MainActivity.addTab(category);
-				toggleEditMode();
-
-				Log.d("IDA", "updatedRows = " + rowsUpdated);
-			}
-		});*/
+		bEdit.setPositiveButton("SAVE", null);
 
 		//set dialog cancel button
 		bEdit.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
@@ -381,7 +357,14 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 					cvEdit.put(ItemsContract.ItemsEntry.COLUMN_CATEGORY, category);
 
 					if (photoUrl.length() <= 0) {
-						photoUrl = getString(R.string.android_resource_uri_base) + R.drawable.v_face;
+						//photoUrl = getString(R.string.android_resource_uri_base) + R.drawable.v_face;
+						if (getGetPhotoUriString() != null && !getGetPhotoUriString().equals("")) {
+							photoUrl = getGetPhotoUriString();
+						} else if (getTakePhotoUriString() != null && !getTakePhotoUriString().equals("")) {
+							photoUrl = getTakePhotoUriString();
+						}else{
+							photoUrl = getString(R.string.android_resource_uri_base) + R.color.colorAccent;
+						}
 					}
 					cvEdit.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, photoUrl);
 					Log.d("IGF", "photoUrl is " + photoUrl);
@@ -408,14 +391,6 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 
 	}
 
-
-
-//	public static void updateItemInfo(String name, String photoUriString){
-//		mName = name;
-//		mPhotoUriString = photoUriString;
-//		mCollapsingToolbar.setTitle(mName);
-//		//onBackdropChanged();
-//	}
 	private void setupViewPager(){
 		mAdapter = new Adapter(getSupportFragmentManager());
 		if (itemUri != null){
@@ -424,16 +399,6 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 		}
 		mViewPager.setAdapter(mAdapter);
 	}
-
-//	@Override
-//	public void onResume() {
-//		super.onResume();  // Always call the superclass method first
-//		if(getEditMode()){
-//			mEditMode = true;
-//		}else{
-//			mEditMode = false;
-//		}
-//	}
 
 	@Override
 	public void onRequestPermissionsResult(int requestCode,
@@ -473,7 +438,10 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 	}
 
 	private void loadBackdrop(String photoUriString) {
-		final ImageView imageView = (ImageView) findViewById(R.id.backdrop);
+		final ImageView imageView =(ImageView) findViewById(R.id.backdrop);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+			imageView.setTransitionName(getString(R.string.transition_image_avatar)+mPosition);
+		}
 		Glide.with(this)
 				.load(photoUriString)
 				.centerCrop()
@@ -485,11 +453,7 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 		return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dipValue, metrics);
 	}
 
-
-
 	private void loadPreviewImage(String path) {
-		File file = new File(path);
-//		Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
 		Glide.with(this)
 				.load(path)
 				.fitCenter()
@@ -506,91 +470,19 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 	@Override
 	public void onInit(int status) {
 		if (status == TextToSpeech.SUCCESS){
-			myTTS.setLanguage(Locale.US);
+			try {
+				myTTS.setLanguage(Locale.US);
+			}catch(Exception e){
+				e.printStackTrace();
+			}
 		}else if(status == TextToSpeech.ERROR){
 			Toast.makeText(this, "Sorry! Text to Speech failed", Toast.LENGTH_LONG).show();
 		}
 	}
 
-	private void sendPicToDb(String picUriString){
-		ContentValues cv = new ContentValues();
-		cv.put(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1, picUriString);
-		int updated = getContentResolver().update(itemUri,cv,null,null);
-
-		Log.d("TAG", "updated = " + updated);
-	}
-
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		if (requestCode == MY_DATA_CHECK_CODE) {
-			if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-				myTTS = new TextToSpeech(this, this);
-			}
-			else {
-				Intent installTTSIntent = new Intent();
-				installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-				startActivity(installTTSIntent);
-			}
-		}
-		if (requestCode == RESULT_LOAD_IMAGE){
-			if (resultCode == RESULT_OK){
-				Uri selectedImage = data.getData();
-				String[] filePathCol = {MediaStore.Images.Media.DATA};
-				Cursor cursor = getContentResolver().query(selectedImage, filePathCol, null, null, null);
-				cursor.moveToFirst();
-				String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
-				Log.d("IDA", "pic path is " + picPath);
-				//setGetPhotoUriString(picPath);
-				//mAdapter.notifyDataSetChanged();
-				//mCursor = getContentResolver().query(itemUri,null,null,null,null);
-				//mCursor.moveToFirst();
-				//String uriString = mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1));
-				//if(uriString !=null || !uriString.equals("")){
-				if(picPath !=null && !picPath.equals("")){
-					//loadBackdrop(selectedImage);
-					loadPreviewImage(picPath);
-					mPhotoUrlBox.setText(picPath);
-					//loadPreviewImage(photoUriString);
-					mLayout.addView(mPhotoUrlBox);
-					mLayout.addView(mPreviewImage);
-				}
-			}
-		}
-		if (requestCode == REQUEST_IMAGE_CAPTURE){
-			if (resultCode == RESULT_OK){
-				Bundle extras = data.getExtras();
-				Uri takenPictureUri = data.getData();
-				String[] filePathCol = {MediaStore.Images.Media.DATA};
-				Cursor cursor = getContentResolver().query(takenPictureUri, filePathCol, null, null, null);
-				cursor.moveToFirst();
-				String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
-//				setGetPhotoUriString(picPath);
-				//sendPicToDb(picPath);
-//				mCursor.moveToFirst();
-//				String uriString = 	mCursor.getString(mCursor.getColumnIndex(ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1));
-//				if(uriString != null){
-//					loadBackdrop(uriString);
-//				}
-				if(picPath !=null && !picPath.equals("")){
-					//loadBackdrop(selectedImage);
-					loadPreviewImage(picPath);
-					mPhotoUrlBox.setText(picPath);
-					//loadPreviewImage(photoUriString);
-					mLayout.addView(mPhotoUrlBox);
-					mLayout.addView(mPreviewImage);
-				}
-			}
-		}
-	}
-
-//	private void takePicture() {
-//		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//		startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
-//	}
 	public void onPhotoClick(View view) {
 
 		if (getEditMode() == true){
-//			takePicture();
 		}else{
 			readText(mName);
 
@@ -639,7 +531,6 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
 			AlertDialog.Builder b = new AlertDialog.Builder(ItemDetailActivity.this);
-			//        b.setTitle("Please enter a category");
 			b.setMessage("Do you want to delete this card?");
 			final Uri myContentUri = ContentUris.withAppendedId(ItemsContract.CardsEntry.buildCardsByItemUri(itemUri), id);
 			Log.d("TAG", "myContentUri = " + myContentUri.toString());
@@ -672,11 +563,62 @@ public class ItemDetailActivity extends AppCompatActivity implements TextToSpeec
 			b.create().show();
 		}
 	}
-//
-//	@Override
-//	public void onBackdropChanged(String uriString) {
-//		loadBackdrop(uriString);
-//	}
-//
 
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode == MY_DATA_CHECK_CODE) {
+			if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+				myTTS = new TextToSpeech(this, this);
+			}
+			else {
+				Intent installTTSIntent = new Intent();
+				installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+				startActivity(installTTSIntent);
+			}
+		}
+		if (requestCode == RESULT_LOAD_IMAGE){
+			if (resultCode == RESULT_OK){
+				Uri selectedImage = data.getData();
+				String[] filePathCol = {MediaStore.Images.Media.DATA};
+				Cursor cursor = getContentResolver().query(selectedImage, filePathCol, null, null, null);
+				cursor.moveToFirst();
+				String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
+
+				if(picPath == null || picPath.equals("")){
+					Toast.makeText(this,getString(R.string.take_photo_failed_warning), Toast.LENGTH_LONG).show();
+				}
+				else {
+					setTakePhotoUriString(picPath);
+					if (picPath != null && !picPath.equals("")) {
+						loadPreviewImage(picPath);
+						mPhotoUrlBox.setText(picPath);
+						mLayout.addView(mPhotoUrlBox);
+						mLayout.addView(mPreviewImage);
+					}
+				}
+			}
+		}
+		if (requestCode == REQUEST_IMAGE_CAPTURE){
+			if (resultCode == RESULT_OK){
+				try {
+					Bundle extras = data.getExtras();
+					Uri takenPictureUri = data.getData();
+					String[] filePathCol = {MediaStore.Images.Media.DATA};
+
+					Cursor cursor = getContentResolver().query(takenPictureUri, filePathCol, null, null, null);
+					cursor.moveToFirst();
+					String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
+					setGetPhotoUriString(picPath);
+					if (picPath != null && !picPath.equals("")) {
+						loadPreviewImage(picPath);
+						mPhotoUrlBox.setText(picPath);
+						mLayout.addView(mPhotoUrlBox);
+						mLayout.addView(mPreviewImage);
+					}
+				}catch(Exception e){
+					Toast.makeText(this, getString(R.string.take_photo_failed_warning), Toast.LENGTH_LONG).show();
+				}
+			}
+		}
+	}
 }

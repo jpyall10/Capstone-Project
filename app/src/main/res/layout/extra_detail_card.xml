@@ -1,6 +1,5 @@
 <!--<?xml version="1.0" encoding="utf-8"?>-->
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:style="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:id="@+id/extra_card"
@@ -31,23 +30,12 @@
 
         <ImageView
             android:id="@+id/extra_image"
-            android:layout_width="200dp"
+            android:layout_width="match_parent"
             android:layout_height="200dp"
             android:scaleType="centerCrop"
             android:layout_gravity="center"
-            android:src="@drawable/v_face"
             android:visibility="gone"
             />
-        <!--<FrameLayout-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:padding="12dp">-->
-            <!--<fragment-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="300dp"-->
-                <!--android:id="@+id/map"-->
-                <!--android:name="com.google.android.gms.maps.MapFragment" />-->
-        <!--</FrameLayout>-->
         <TextView
             android:id="@+id/extra_description"
             android:layout_gravity="bottom"
@@ -63,7 +51,6 @@
             android:text="test"
             style="@style/Widget.CardContent"
             android:textAppearance="?attr/textAppearanceListItem"/>
-        <!--android:textColor="@android:color/white"-->
 
     </LinearLayout>
 </android.support.v7.widget.CardView>

@@ -37,17 +37,10 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.example.android.project7.data.ItemsContract;
 
-import java.io.File;
-
-/**
- * Created by Jon on 7/10/2016.
- */
 public class ItemDetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private final String LOG_TAG = this.getClass().getSimpleName();
 
     private Long mItemId;
-    private FloatingActionButton fab;
-    private TextToSpeech myTTS;
 
     private String mGetPhotoUriString;
     private String mTakePhotoUriString;
@@ -56,27 +49,15 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
     private LinearLayout addCardLayout;
     private EditText photoUrlBox;
 
-//    private Uri itemUri;
-
     private RecyclerView mRecyclerView;
 
     private ItemDetailAdapter mItemDetailAdapter;
-
-    private int MY_DATA_CHECK_CODE = 0;
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int RESULT_LOAD_IMAGE = 0;
 
 
     private static final int ITEM_CARDS_LOADER = 1;
-
-//    private static final String[] ITEM_COLUMNS = {
-//            ItemsContract.ItemsEntry.TABLE_NAME + "." + ItemsContract.ItemsEntry._ID,
-//            ItemsContract.ItemsEntry.COLUMN_NAME,
-//            ItemsContract.ItemsEntry.COLUMN_CATEGORY,
-//            ItemsContract.ItemsEntry.COLUMN_PHOTO_RES_ID,
-//            ItemsContract.ItemsEntry.COLUMN_PHOTO_EXTRA_1,
-//    };
 
     private static final String[] CARD_COLUMNS = {
             ItemsContract.CardsEntry.TABLE_NAME + "." + ItemsContract.CardsEntry._ID,
@@ -87,21 +68,6 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
             ItemsContract.CardsEntry.COLUMN_EXTRA_CARD_LOCATION
     };
 
-//    static final int COL_ITEM_ID = 0;
-//    static final int COL_ITEM_NAME = 1;
-//    static final int COL_ITEM_CATEGORY = 2;
-//    static final int COL_ITEM_PHOTO = 3;
-//    static final int COL_PHOTO_EXTRA_1 = 4;
-
-    static final int COL_CARD_ID = 0;
-    static final int COL_ITEM_ID = 1;
-    static final int COL_EXTRA_CARD_LABEL = 2;
-    static final int COL_EXTRA_CARD_DESCRIPTION = 3;
-    static final int COL_EXTRA_CARD_PHOTO = 4;
-    static final int COL_EXTRA_LOCATION = 5;
-
-//    Create a newInstance method if you want to pass info to the fragment
-//            maybe to have types of cards like (info, memories, photo frame, etc.)
 
     public static Fragment newInstance(Long itemId){
         Bundle args = new Bundle();
@@ -114,7 +80,6 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
     public interface Callback {
         public void onItemSelected(Long id, ItemDetailAdapter.ItemDetailAdapterViewHolder vh);
         public void onItemLongSelected(Long id);
-        //public void onBackdropChanged(String uriString);
     }
 
     @Override
@@ -124,10 +89,8 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
         Bundle args = getArguments();
         if (args != null){
             mItemId = args.getLong(ItemsContract.CardsEntry.COLUMN_ITEM_KEY);
-           // mCategory = args.getString(ARG_ITEM_CATEGORY);
         }else{
             mItemId = null;
-           // mCategory = null;
         }
 
     }
@@ -137,7 +100,7 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
         super.onResume();  // Always call the superclass method first
         if(ItemDetailActivity.getEditMode()){
             Log.d(LOG_TAG, "onResume edit mode is true");
-            ItemDetailActivity.mEditMode = true;
+            //ItemDetailActivity.mEditMode = true;
             ItemDetailActivity.fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -146,7 +109,7 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
             });
         }else{
             Log.d(LOG_TAG, "onResume edit mode is false");
-            ItemDetailActivity.mEditMode = false;
+            //ItemDetailActivity.mEditMode = false;
         }
     }
 
@@ -179,50 +142,18 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
                     ItemDetailActivity.fab.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-//                                if (mInterstitialAd.isLoaded()) {
-//                                    mInterstitialAd.show();
-//                                }
                                 addCard();
-//                                requestNewInterstitial();
                         }
                     });
-                    //item.setTitle(getString(R.string.edit_mode_on));
                 }else{
                     Toast toast = Toast.makeText(this.getActivity(), getString(R.string.edit_mode_turned_off),Toast.LENGTH_LONG);
                     toast.show();
                     item.setIcon(R.drawable.ic_create_24dp);
                     ItemDetailActivity.fab.setVisibility(View.GONE);
-                    //item.setTitle(getString(R.string.edit_mode_off));
                 }
                 break;
             default:
         }
-//            case R.id.edit_mode:
-//                ItemDetailActivity.toggleEditMode();
-//
-//                if(ItemDetailActivity.getEditMode()) {
-//                    item.setIcon(R.drawable.ic_create_24dp_accent);
-//                    ItemDetailActivity.fab.setVisibility(View.VISIBLE);
-//                    ItemDetailActivity.fab.setOnClickListener(new View.OnClickListener() {
-//                        @Override
-//                        public void onClick(View view) {
-////                                if (mInterstitialAd.isLoaded()) {
-////                                    mInterstitialAd.show();
-////                                }
-////
-////                                requestNewInterstitial();
-//                            addCard();
-//                        }
-//                    });
-//                    //item.setTitle(getString(R.string.edit_mode_on));
-//                }else{
-//                    item.setIcon(R.drawable.ic_create_24dp);
-//                    ItemDetailActivity.fab.setVisibility(View.GONE);
-//                    //item.setTitle(getString(R.string.edit_mode_off));
-//                }
-//                break;
-//            default:
-//        }
         return true;
     }
 
@@ -250,7 +181,6 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
         //Initialize photoUrlBox and set Hint
         photoUrlBox = new EditText(ItemDetailFragment.this.getContext());
         photoUrlBox.setHint("Enter a photo URL");
-//        layout.addView(photoUrlBox);
 
         //initialize PreviewImageView and set layout params
         mPreviewImage = new ImageView(this.getActivity());
@@ -366,8 +296,6 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
     }
 
     private void loadPreviewImage(String path) {
-        File file = new File(path);
-//		Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
         Glide.with(this)
                 .load(path)
                 .fitCenter()
@@ -400,7 +328,6 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
 
             @Override
             public void onClick(Long id, ItemDetailAdapter.ItemDetailAdapterViewHolder vh) {
-                //id = mCursor.getLong(COL_ITEM_ID);
                 ((Callback)getActivity()).onItemSelected(id,vh);
             }
 
@@ -416,7 +343,6 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-
         getLoaderManager().initLoader(ITEM_CARDS_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
     }
@@ -437,7 +363,6 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
 
         return new CursorLoader(getActivity(),
                 cardsUri,
-                //null,null,null,null);
                 CARD_COLUMNS,
                 selection,
                 selectionArgs,
@@ -459,52 +384,51 @@ public class ItemDetailFragment extends Fragment implements LoaderManager.Loader
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         //super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == RESULT_LOAD_IMAGE && resultCode == this.getActivity().RESULT_OK && null != data) {
-//            Uri selectedImage = data.getData();
-//            String[] filePathCol = {MediaStore.Images.Media.DATA};
-//            Cursor cursor = getActivity().getContentResolver().query(selectedImage, filePathCol, null, null, null);
-//            cursor.moveToFirst();
-//            String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
-//            setGetPhotoUriString(picPath);
-//            if(picPath !=null && !picPath.equals("")){
-//                loadPreviewImage(picPath);
-////				try {
-//                mPhotoUrlBox.setText(picPath);
-//                mLayout.addView(mPhotoUrlBox);
-//                mLayout.addView(mPreviewImage);
-////				}catch (Exception e){
-////					e.printStackTrace();
-////				}
-//            }
 
             Uri selectedImage = data.getData();
             String[] filePathCol = {MediaStore.Images.Media.DATA};
             Cursor cursor = getActivity().getContentResolver().query(selectedImage, filePathCol, null, null, null);
             cursor.moveToFirst();
             String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
-            setGetPhotoUriString(picPath);
-            Log.d("IGF", "getGetPhotoUriString = " + picPath);
-            if(picPath !=null && !picPath.equals("")){
-                loadPreviewImage(picPath);
-                photoUrlBox.setText(picPath);
-                addCardLayout.addView(photoUrlBox);
-                addCardLayout.addView(mPreviewImage);
+            if(picPath == null || picPath.equals("")){
+                Toast.makeText(this.getContext(),getString(R.string.get_file_failed_warning), Toast.LENGTH_LONG).show();
             }
-        }
-        if (requestCode == REQUEST_IMAGE_CAPTURE){
-            if (resultCode == this.getActivity().RESULT_OK){
-                Bundle extras = data.getExtras();
-                Uri takenPictureUri = data.getData();
-                String[] filePathCol = {MediaStore.Images.Media.DATA};
-                Cursor cursor = getActivity().getContentResolver().query(takenPictureUri, filePathCol, null, null, null);
-                cursor.moveToFirst();
-                String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
+            else {
                 setGetPhotoUriString(picPath);
-                Log.d("IGF", "getTakePhotoUriString = " + picPath);
-                if(picPath !=null && !picPath.equals("")){
+                Log.d("IGF", "getGetPhotoUriString = " + picPath);
+                if (picPath != null && !picPath.equals("")) {
                     loadPreviewImage(picPath);
                     photoUrlBox.setText(picPath);
                     addCardLayout.addView(photoUrlBox);
                     addCardLayout.addView(mPreviewImage);
+                }
+            }
+        }
+
+        if (requestCode == REQUEST_IMAGE_CAPTURE){
+            if (resultCode == this.getActivity().RESULT_OK){
+                try{
+                    Bundle extras = data.getExtras();
+                    Uri takenPictureUri = data.getData();
+                    String[] filePathCol = {MediaStore.Images.Media.DATA};
+                    Cursor cursor = getActivity().getContentResolver().query(takenPictureUri, filePathCol, null, null, null);
+                    cursor.moveToFirst();
+                    String picPath = cursor.getString(cursor.getColumnIndex(filePathCol[0]));
+                    if (picPath == null || picPath.equals("")) {
+                        Toast.makeText(this.getContext(), getString(R.string.take_photo_failed_warning), Toast.LENGTH_LONG).show();
+                    } else {
+                        setTakePhotoUriString(picPath);
+                        Log.d("IGF", "getTakePhotoUriString = " + picPath);
+                        if (picPath != null && !picPath.equals("")) {
+                            loadPreviewImage(picPath);
+                            photoUrlBox.setText(picPath);
+                            addCardLayout.addView(photoUrlBox);
+                            addCardLayout.addView(mPreviewImage);
+                        }
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                    Toast.makeText(this.getContext(), getString(R.string.take_photo_failed_warning), Toast.LENGTH_LONG).show();
                 }
             }
         }

@@ -19,7 +19,6 @@ public class Item {
 	public Item(Context context, String name,String photoUriString, String category) {
 		this.context = context;
 		this.name = name;
-//		this.photo = photo;
 		this.photoUriString = photoUriString;
 		this.category = category;
 	}
@@ -28,17 +27,9 @@ public class Item {
 		return name;
 	}
 
-//	public void setPhoto(int photo) {
-//		this.photo = photo;
-//	}
-
 	public String getPhotoUriString(){
 		return photoUriString;
 	}
-
-//	public int getPhoto() {
-//		return photo;
-//	}
 
 	public String getCategory() {
 		return category;

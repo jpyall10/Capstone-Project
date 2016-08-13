@@ -58,7 +58,6 @@ public class ItemDetailAdapter extends RecyclerView.Adapter<ItemDetailAdapter.It
             mCursor.moveToPosition(adapterPosition);
             int idColumnIndex = mCursor.getColumnIndex(ItemsContract.CardsEntry._ID);
             mClickHandler.onClick(mCursor.getLong(idColumnIndex), this);
-            Log.d("IDA","this happened and id = " + mCursor.getLong(idColumnIndex));
         }
 
         @Override
@@ -103,19 +102,10 @@ public class ItemDetailAdapter extends RecyclerView.Adapter<ItemDetailAdapter.It
             holder.mTitleView.setText(extraTitle);
             holder.mDescriptionView.setText(extraDescription);
 
-
-
-
-            Log.d("IGA", "OnBindViewHolder ran " + " and photo, name " + extraPhoto + ", " + extraTitle);
-
-            Log.d("IGA", "OnBindViewHolder ran " + " position = " + position);
-
             if (extraPhoto != null && !extraPhoto.equals("")) {
                 holder.mImageView.setVisibility(View.VISIBLE);
-                Log.d("TAG", "Glide ran with photo url" + extraDescription);
-                Uri photoUri = Uri.parse(extraPhoto);
                 Glide.with(holder.mImageView.getContext())
-                        .load(photoUri)
+                        .load(extraPhoto)
                         .fitCenter()
                         .into(holder.mImageView);
             }

@@ -75,7 +75,8 @@
     <string name="edit_mode_turned_off">Edit Mode Is Off</string>
 
 
-    <string name="android_resource_uri_base">android.resource://com.example.android.project7/</string>
+    <string name="android_resource_uri_base" translatable="false">android.resource://com.example.android.project7/</string>
+
     <string name="username">Username</string>
     <string name="backup_db">Backup db</string>
     <string name="restore_db">Restore db</string>
@@ -85,4 +86,19 @@
     <string name="default_category">default</string>
     <string name="enter_category_warning">You must enter a category to add item</string>
     <string name="delete_item_warning">You must be in edit mode to delete item</string>
+    <string name="transition_image_avatar">transition_image_avatar</string>
+    <string name="transition_image_text">transition_image_text</string>
+    <string name="open_drawer_warning">You must be in edit mode to open drawer</string>
+    <string name="get_file_failed_warning">Selected picture must be in local folder</string>
+    <string name="take_photo_failed_warning">Image not loaded, device may not be supported</string>
+
+    <string name="restore_db_button">RESTORE</string>
+    <string name="restore_db_title">Restore Database</string>
+    <string name="db_restore_hint">Choose file or RESTORE for default backup</string>
+
+    <string name="default_restore_path" translatable="false">/storage/emulated/0/Download/items.db</string>
+    <!--"/data/user/0/com.example.android.project7/databases/items.db"-->
+    <string name="default_db_path" translatable="false">/data/user/0/com.example.android.project7/databases/items.db</string>
+    <string name="db_copy_name" translatable="false">/items_db_copy.db</string>
+    <string name="get_content_type_file" translatable="false">file/*</string>
 </resources>
