@@ -12,12 +12,14 @@ keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
     signingConfigs {
-        config {
+        tempConfig {
             keyAlias keystoreProperties['keyAlias']
             keyPassword keystoreProperties['keyPassword']
             storeFile file(keystoreProperties['storeFile'])
             storePassword keystoreProperties['storePassword']
         }
+//        tempConfig {
+//        }
     }
     compileSdkVersion 23
     buildToolsVersion "23.0.3"
@@ -32,7 +34,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.config
+            signingConfig signingConfigs.tempConfig
         }
     }
 }
