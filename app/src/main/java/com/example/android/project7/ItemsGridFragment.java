@@ -97,7 +97,7 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 	@Override
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
-		MobileAds.initialize(getActivity().getApplicationContext(), "ca-app-pub-3364537753375699~3862655769");
+		MobileAds.initialize(getActivity().getApplicationContext(), getString(R.string.ad_app_id));
 		setHasOptionsMenu(true);
 		Bundle args = getArguments();
 		if (args != null){
@@ -111,11 +111,11 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 //		Ad unit ID: ca-app-pub-3364537753375699/5339388964
 
 		//Real Ads
-		//mInterstitialAd.setAdUnitId("ca-app-pub-3364537753375699/5339388964");
+		mInterstitialAd.setAdUnitId(getString(R.string.ad_unit_id));
 
 
 		//Test Ads
-		mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
+//		mInterstitialAd.setAdUnitId("ca-app-pub-3940256099942544/1033173712");
 
 		mInterstitialAd.setAdListener(new AdListener() {
 			@Override

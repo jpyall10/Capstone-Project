@@ -101,4 +101,6 @@
     <string name="default_db_path" translatable="false">/data/user/0/com.example.android.project7/databases/items.db</string>
     <string name="db_copy_name" translatable="false">/items_db_copy.db</string>
     <string name="get_content_type_file" translatable="false">file/*</string>
+    <string name="ad_unit_id">ca-app-pub-3364537753375699/5339388964</string>
+    <string name="ad_app_id">ca-app-pub-3364537753375699~3862655769</string>
 </resources>
