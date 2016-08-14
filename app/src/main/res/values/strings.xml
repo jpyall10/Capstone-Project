@@ -53,7 +53,6 @@
     <string name="food_name_tomatoes">tomatoes</string>
 
 
-
     <string name="default_columns">2</string>
 
 
@@ -103,4 +102,7 @@
     <string name="get_content_type_file" translatable="false">file/*</string>
     <string name="ad_unit_id">ca-app-pub-3364537753375699/5339388964</string>
     <string name="ad_app_id">ca-app-pub-3364537753375699~3862655769</string>
+    <string name="appwidget_text">Teach Me</string>
+    <string name="add_widget">Add widget</string>
+    <string name="no_names_text">No people have been added</string>
 </resources>

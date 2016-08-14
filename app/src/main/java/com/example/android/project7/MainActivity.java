@@ -86,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     private static final int MY_DATA_CHECK_CODE = 0;
     private static final int RC_SIGN_IN = 1;
     private static final int FILE_SELECT_CODE=2;
+
+
     private String mDisplayName;
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -328,7 +330,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                                 }
                                 break;
                             case R.id.restore_db:
-
+                                verifyStoragePermissions(MainActivity.this);
                                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
                                 AlertDialog.Builder b = new AlertDialog.Builder(MainActivity.this);

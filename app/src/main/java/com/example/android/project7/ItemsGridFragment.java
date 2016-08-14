@@ -1,17 +1,21 @@
 package com.example.android.project7;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -69,6 +73,12 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 
 	private static final int RESULT_LOAD_IMAGE = 10;
 	private static final int REQUEST_IMAGE_CAPTURE = 11;
+
+	private static final int REQUEST_EXTERNAL_STORAGE = 99;
+	private static String[] PERMISSIONS_STORAGE = {
+			Manifest.permission.READ_EXTERNAL_STORAGE,
+			Manifest.permission.WRITE_EXTERNAL_STORAGE
+	};
 
 
 	private static final int ITEMS_LOADER = 0;
@@ -288,7 +298,22 @@ public class ItemsGridFragment extends Fragment implements LoaderManager.LoaderC
 				.into(mPreviewImage);
 	}
 
+	public static void verifyStoragePermissions(Activity activity) {
+		// Check if we have write permission
+		int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+		if (permission != PackageManager.PERMISSION_GRANTED) {
+			// We don't have permission so prompt the user
+			ActivityCompat.requestPermissions(
+					activity,
+					PERMISSIONS_STORAGE,
+					REQUEST_EXTERNAL_STORAGE
+			);
+		}
+	}
+
 	public void addItem() {
+		verifyStoragePermissions(ItemsGridFragment.this.getActivity());
 		getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
 		final ContentValues cv = new ContentValues();
